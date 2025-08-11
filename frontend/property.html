@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Optiloves – Property</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+    .muted{color:#6b7280}
+    .grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .img{width:100%;max-height:420px;object-fit:cover;border-radius:12px}
+    .btn{padding:.7rem 1rem;border-radius:10px;border:1px solid #0ea5e9;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
+    .btn.secondary{background:#fff;color:#0ea5e9}
+    input{width:100%;padding:.6rem;border:1px solid #d1d5db;border-radius:8px}
+    .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+    .item{background:#f9fafb;border:1px solid #eef2f7;border-radius:10px;padding:.8rem}
+  </style>
+</head>
+<body>
+  <header class="container" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="index.html"><img src="assets/logo_horizontal.svg" alt="Optiloves Invest" height="34"></a>
+    <nav><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+
+  <main class="container">
+    <div class="muted" id="crumbs">Home ▸ Property</div>
+    <h1 id="title">Loading…</h1>
+    <div class="muted" id="city"></div>
+
+    <section class="grid" style="margin-top:12px">
+      <div class="card">
+        <img id="img" class="img" alt="">
+        <p id="desc" style="margin-top:12px"></p>
+        <div class="meta">
+          <div class="item"><div class="muted">Price per token</div><div id="ppt"><!-- $ --></div></div>
+          <div class="item"><div class="muted">Total tokens</div><div id="total"></div></div>
+          <div class="item"><div class="muted">Tokens sold</div><div id="sold"></div></div>
+          <div class="item"><div class="muted">Available</div><div id="avail"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">Invest</h2>
+        <label>Email <input id="email" type="email" placeholder="you@example.com"></label>
+        <label style="display:block;margin-top:.6rem">Tokens <input id="tokens" type="number" min="1" step="1" placeholder="e.g. 5"></label>
+        <p class="muted" id="totalUsd" style="margin:.6rem 0 0">Total: —</p>
+        <div style="display:flex;gap:.5rem;margin-top:.6rem">
+          <button id="buy" class="btn">Invest now</button>
+          <button class="btn secondary" onclick="history.back()">Back</button>
+        </div>
+        <div class="muted" style="margin-top:.5rem">This MVP records a simulated purchase.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    const $ = s => document.querySelector(s);
+    const slug = new URL(location.href).searchParams.get("slug") || "";
+
+    const slugify = name => (name||"").toLowerCase()
+      .normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+
+    let current = null, ppt = 0;
+
+    function recalc(){
+      const n = parseInt($("#tokens").value,10)||0;
+      $("#totalUsd").textContent = n>0 ? `Total: $${(n*ppt).toFixed(2)}` : "Total: —";
+    }
+
+    async function load(){
+      if(!slug){ $("#title").textContent = "No property selected"; return; }
+      try{
+        const res = await fetch(`${BACKEND_URL}/api/properties`);
+        const list = await res.json();
+        current = list.find(p=>p.slug===slug) || list.find(p=>slugify(p.name||p["Property Name"])===slug);
+        if(!current) throw new Error("Not found");
+
+        const name  = current.name || current["Property Name"] || "Property";
+        const city  = current.city || current["City"] || "";
+        ppt   = Number(current.pricePerToken ?? current["Price per Token (USD)"] ?? 0);
+        const total = Number(current.totalTokens ?? current["Total Tokens"] ?? 0);
+        const sold  = Number(current.tokensSold ?? current["Tokens Sold"] ?? 0);
+        const avail = Number(current.availableTokens ?? current["Available Tokens"] ?? (total - sold));
+        const img   = current.image || current["Image URL"] || "";
+        const desc  = current.description || current["Description"] || "";
+
+        $("#crumbs").innerHTML = `<a href="index.html">Home</a> ▸ ${name}`;
+        $("#title").textContent = name;
+        $("#city").textContent  = city;
+        $("#ppt").textContent   = `$${ppt.toFixed(2)}`;
+        $("#total").textContent = total;
+        $("#sold").textContent  = sold;
+        $("#avail").textContent = avail;
+        if(img) $("#img").src = img;
+        $("#desc").textContent  = desc;
+        recalc();
+      }catch(e){ console.error(e); $("#title").textContent="Error loading property"; }
+    }
+
+    $("#tokens").addEventListener("input", recalc);
+
+    $("#buy").addEventListener("click", async () => {
+      const email = $("#email").value.trim();
+      const n = parseInt($("#tokens").value,10)||0;
+      if(!email || n < 1){ alert("Enter a valid email and at least 1 token."); return; }
+      const propertyName = current.name || current["Property Name"];
+      try{
+        const res = await fetch(`${BACKEND_URL}/api/invest`, {
+          method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ email, propertyName, tokens:n })
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
+        alert("Investment recorded ✅");
+      }catch(err){ console.error(err); alert("Sorry, something went wrong."); }
+    });
+
+    load();
+  </script>
+</body>
+</html>

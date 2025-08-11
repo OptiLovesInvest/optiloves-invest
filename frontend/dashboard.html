@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Optiloves – Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input{padding:.6rem;border:1px solid #d1d5db;border-radius:8px}
+    button{padding:.6rem 1rem;border-radius:10px;border:1px solid #0ea5e9;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border-bottom:1px solid #eef2f7;padding:10px;text-align:left}
+    .muted{color:#6b7280}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+    .stat{background:#f9fafb;border:1px solid #eef2f7;border-radius:10px;padding:.9rem}
+    @media (max-width:900px){.stats{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<nav class="nav-menu">
+  <a href="index.html">Home</a>
+</nav>
+
+  <header class="container" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="index.html"><img src="assets/logo_horizontal.svg" alt="Optiloves Invest" height="34"></a>
+    <nav><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+
+  <main class="container">
+    <h1>Your Dashboard</h1>
+    <div class="card">
+      <div class="row">
+        <input id="email" type="email" placeholder="you@example.com" style="flex:1;min-width:260px" />
+        <button id="loadBtn">Load investments</button>
+      </div>
+      <p class="muted" style="margin:.6rem 0 0">Enter the same email you used when investing.</p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="muted">Total tokens</div>
+          <div id="totalTokens" style="font-weight:700;font-size:1.1rem">—</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Est. total (USD)</div>
+          <div id="totalUsd" style="font-weight:700;font-size:1.1rem">—</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Positions</div>
+          <div id="positions" style="font-weight:700;font-size:1.1rem">—</div>
+        </div>
+      </div>
+
+      <table id="table" style="display:none">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Property</th>
+            <th class="muted">Price/Token</th>
+            <th>Tokens</th>
+            <th>Amount (USD)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <p id="empty" class="muted" style="margin-top:12px">No investments yet.</p>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    const $ = s => document.querySelector(s);
+    const usd = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0);
+    const num = n => Number.isFinite(+n) ? +n : 0;
+
+    async function loadInvestments(){
+      const email = $("#email").value.trim();
+      if(!email){ alert("Enter your email."); return; }
+
+      $("#table").style.display = "none";
+      $("#empty").textContent = "Loading…";
+
+      try{
+        const [invRes, propRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/investments/${encodeURIComponent(email)}`),
+          fetch(`${BACKEND_URL}/api/properties`)
+        ]);
+        if(!invRes.ok) throw new Error(`HTTP ${invRes.status}`);
+        const list = await invRes.json();
+        const props = await propRes.json();
+        const byName = new Map(props.map(p => [p.name || p["Property Name"], p]));
+
+        let totalTokens = 0, totalUsd = 0;
+        const tbody = $("#tbody");
+        tbody.innerHTML = "";
+
+        list.forEach(r => {
+          const name = r.propertyName || r["Property Name"] || "";
+          const tokens = num(r.tokens ?? r["Tokens"]);
+          const price = num(r.pricePerToken ?? r["Price per Token (USD)"] ?? (byName.get(name)?.pricePerToken));
+          const amount = tokens * price;
+          totalTokens += tokens; totalUsd += amount;
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.timestamp || r.date || "—"}</td>
+            <td>${name}</td>
+            <td class="muted">${usd(price)}</td>
+            <td>${tokens}</td>
+            <td>${usd(amount)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        $("#totalTokens").textContent = totalTokens;
+        $("#totalUsd").textContent = usd(totalUsd);
+        $("#positions").textContent = list.length;
+
+        $("#empty").textContent = list.length ? "" : "No investments yet.";
+        $("#table").style.display = list.length ? "table" : "none";
+      }catch(e){
+        console.error(e);
+        $("#empty").textContent = "Could not load your investments.";
+      }
+    }
+
+    $("#loadBtn").addEventListener("click", loadInvestments);
+  </script>
+</body>
+</html>

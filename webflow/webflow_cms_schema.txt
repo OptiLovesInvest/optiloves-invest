@@ -1,0 +1,11 @@
+Webflow CMS: Properties (create these fields before import)
+- Name: Plain text (Required)
+- Slug: Auto
+- City: Plain text
+- Price per Token: Number
+- Total Tokens: Number
+- Tokens Sold: Number
+- Available Tokens: Number (optional display)
+- Image: Image
+- Description: Rich text
+- Stripe Link: URL

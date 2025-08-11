@@ -1,0 +1,3 @@
+﻿[build]
+base = "frontend"
+publish = "frontend"
