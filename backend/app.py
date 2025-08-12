@@ -1,10 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-from flask_cors import CORS
 CORS(app)
-
 
 DETAILS = {
     "kin-001": {
@@ -53,5 +51,22 @@ def property_detail(prop_id):
         return jsonify({"error": "Not found"}), 404
     return jsonify(data)
 
+@app.post("/invest")
+def invest():
+    data = request.get_json(force=True, silent=True) or {}
+    pid = data.get("property_id")
+    tokens = int(data.get("tokens") or 0)
+
+    if pid not in DETAILS:
+        return jsonify({"error": "Unknown property"}), 404
+    if tokens <= 0:
+        return jsonify({"error": "Invalid token quantity"}), 400
+    if tokens > DETAILS[pid]["available_tokens"]:
+        return jsonify({"error": "Not enough tokens available"}), 400
+
+    DETAILS[pid]["available_tokens"] -= tokens
+    total_usd = tokens * DETAILS[pid]["token_price_usd"]
+    return jsonify({"ok": True, "property_id": pid, "tokens": tokens, "total_usd": total_usd})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)
