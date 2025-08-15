@@ -1,9 +1,23 @@
+// frontend/src/app/layout.tsx
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Optiloves Invest",
   description: "African real estate tokenization",
 };
+
+// Include Sentry trace data in metadata so errors/transactions link up nicely
+export function generateMetadata(): Metadata {
+  return {
+    ...metadata,
+    other: {
+      ...(metadata.other as Record<string, any> | undefined),
+      ...Sentry.getTraceData(),
+    },
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
