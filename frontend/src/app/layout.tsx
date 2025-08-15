@@ -3,17 +3,17 @@ import Link from "next/link";
 import * as Sentry from "@sentry/nextjs";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+// Use ONLY generateMetadata (do not export `metadata`)
+const baseMeta: Metadata = {
   title: "Optiloves Invest",
   description: "African real estate tokenization",
 };
 
-// Include Sentry trace data in metadata so errors/transactions link up nicely
 export function generateMetadata(): Metadata {
   return {
-    ...metadata,
+    ...baseMeta,
     other: {
-      ...(metadata.other as Record<string, any> | undefined),
+      ...(baseMeta.other as Record<string, any> | undefined),
       ...Sentry.getTraceData(),
     },
   };
