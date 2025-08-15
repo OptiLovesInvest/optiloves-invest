@@ -1,37 +1,34 @@
+# backend/app.py
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from supabase import create_client
+import os, uuid, time
 
 app = Flask(__name__)
 CORS(app)
 
-DETAILS = {
-    "kin-001": {
-        "id": "kin-001",
-        "title": "Kinshasa — Gombe Apartments",
-        "city": "Kinshasa",
-        "country": "DR Congo",
-        "price_usd": 250000,
-        "token_price_usd": 50,
-        "available_tokens": 5000,
-        "description": "Modern apartments in Gombe with strong rental demand.",
-        "images": ["https://picsum.photos/seed/gombe/1200/600"]
-    },
-    "lua-001": {
-        "id": "lua-001",
-        "title": "Luanda — Ilha Offices",
-        "city": "Luanda",
-        "country": "Angola",
-        "price_usd": 480000,
-        "token_price_usd": 100,
-        "available_tokens": 4800,
-        "description": "Prime offices on Ilha do Cabo, close to embassies and banks.",
-        "images": ["https://picsum.photos/seed/ilha/1200/600"]
-    }
-}
+# ---- Rate limiting ----
+# Default: 60 requests/min per IP; /buy is limited separately below.
+limiter = Limiter(get_remote_address, app=app, default_limits=["60 per minute"])
 
-@app.get("/")
-def index():
-    return "Backend is running"
+# ---- Optional Supabase client (for order logging) ----
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY) if SUPABASE_URL and SUPABASE_SERVICE_KEY else None
+
+# ---- In-memory inventory (demo) ----
+# Keep keys exactly as your frontend expects: id, title, price, availableTokens
+PROPERTIES = [
+    {"id": "kin-001", "title": "Kinshasa — Gombe Apartments", "price": 120_000, "availableTokens": 4995},
+    {"id": "lua-001", "title": "Luanda — Ilha Offices",        "price": 250_000, "availableTokens": 2999},
+]
+
+def find_property(prop_id: str):
+    return next((p for p in PROPERTIES if p["id"] == prop_id), None)
+
+# ---- Endpoints ----
 
 @app.get("/health")
 def health():
@@ -39,34 +36,94 @@ def health():
 
 @app.get("/properties")
 def properties():
+    """Public catalog: [{ id, title, price, availableTokens }]"""
     return jsonify([
-        {"id": "kin-001", "title": "Kinshasa — Gombe Apartments"},
-        {"id": "lua-001", "title": "Luanda — Ilha Offices"}
+        {
+            "id": p["id"],
+            "title": p["title"],
+            "price": int(p["price"]),
+            "availableTokens": int(p["availableTokens"]),
+        }
+        for p in PROPERTIES
     ])
 
-@app.get("/properties/<prop_id>")
-def property_detail(prop_id):
-    data = DETAILS.get(prop_id)
-    if not data:
-        return jsonify({"error": "Not found"}), 404
-    return jsonify(data)
+@app.get("/price/<prop_id>")
+def price(prop_id: str):
+    """Optional detail endpoint: { ok, price, available }"""
+    p = find_property(prop_id)
+    if not p:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+    return jsonify({"ok": True, "price": int(p["price"]), "available": int(p["availableTokens"])})
 
-@app.post("/invest")
-def invest():
-    data = request.get_json(force=True, silent=True) or {}
-    pid = data.get("property_id")
-    tokens = int(data.get("tokens") or 0)
+@app.post("/buy")
+@limiter.limit("10 per minute")  # stricter per-IP limit for purchases
+def buy():
+    """
+    Body: { property_id, quantity, wallet }
+    Returns:
+      { ok, property_id, quantity, price, total_usd, tx_signature, wallet }
+    Also decrements in-memory availability and (optionally) logs to Supabase.
+    """
+    data = request.get_json(force=True) or {}
+    prop_id = str(data.get("property_id") or "").strip()
+    wallet  = str(data.get("wallet") or "unknown")[:128]
+    try:
+        qty = int(data.get("quantity", 0))
+    except Exception:
+        qty = 0
 
-    if pid not in DETAILS:
-        return jsonify({"error": "Unknown property"}), 404
-    if tokens <= 0:
-        return jsonify({"error": "Invalid token quantity"}), 400
-    if tokens > DETAILS[pid]["available_tokens"]:
-        return jsonify({"error": "Not enough tokens available"}), 400
+    p = find_property(prop_id)
+    if not p:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+    if qty <= 0:
+        return jsonify({"ok": False, "error": "bad_qty"}), 400
+    if qty > int(p["availableTokens"]):
+        return jsonify({"ok": False, "error": "insufficient"}), 400
 
-    DETAILS[pid]["available_tokens"] -= tokens
-    total_usd = tokens * DETAILS[pid]["token_price_usd"]
-    return jsonify({"ok": True, "property_id": pid, "tokens": tokens, "total_usd": total_usd})
+    # ✅ Use the 'price' field your frontend/catalog uses
+    unit_price = int(p["price"])
+    total = unit_price * qty
 
+    # ✅ Decrement in-memory availability
+    p["availableTokens"] = int(p["availableTokens"]) - qty
+
+    tx_sig = f"demo-{uuid.uuid4().hex[:16]}"
+
+    # Optional: persist the order (best-effort)
+    if sb:
+        try:
+            sb.table("orders").insert({
+                "id": tx_sig,
+                "property_id": prop_id,
+                "wallet": wallet,
+                "quantity": qty,
+                "unit_price_usd": unit_price,
+                "total_usd": total,
+                "status": "PENDING_PAYMENT",
+                "ts": int(time.time()),
+            }).execute()
+        except Exception as e:
+            # Do not fail the purchase if logging fails
+            print("Supabase insert error:", e)
+
+    return jsonify({
+        "ok": True,
+        "property_id": prop_id,
+        "quantity": qty,
+        "price": unit_price,
+        "total_usd": total,
+        "tx_signature": tx_sig,
+        "wallet": wallet,
+    })
+
+@app.post("/airdrop")
+def airdrop():
+    """Devnet helper stub used by the demo UI."""
+    data = request.get_json(force=True) or {}
+    wallet = str(data.get("wallet") or "")[:128]
+    return jsonify({"ok": True, "requested": "1 SOL (devnet)", "wallet": wallet})
+
+# ---- Entrypoint ----
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

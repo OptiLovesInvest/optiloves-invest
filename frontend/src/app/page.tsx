@@ -1,28 +1,45 @@
-'use client';
-import { useEffect, useState } from 'react';
-type Prop = { id: string; title: string };
+// frontend/src/app/page.tsx
+import Link from 'next/link';
 
-export default function Home() {
-  const [list, setList] = useState<Prop[]>([]);
-  const [err, setErr] = useState<string|null>(null);
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    fetch('http://127.0.0.1:5000/properties')
-      .then(r => r.json()).then(setList)
-      .catch(e => setErr(e.message));
-  }, []);
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
-  if (err) return <main style={{padding:20}}>Error: {err}</main>;
+type PropertyItem = {
+  id: string;
+  title: string;
+  price: number;
+  availableTokens: number;
+};
+
+async function fetchProperties(): Promise<PropertyItem[]> {
+  const res = await fetch(`${BASE}/properties`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load properties (${res.status})`);
+  return res.json();
+}
+
+export default async function Home() {
+  const data = await fetchProperties();
 
   return (
-    <main style={{ padding: 20 }}>
-      <h2>Properties</h2>
-      {list.map(p => (
-        <div key={p.id} style={{ border:'1px solid #ccc', padding:10, margin:'10px 0' }}>
-          <h3><a href={`/property/${p.id}`}>{p.title}</a></h3>
-          <button>Invest (demo)</button>
-        </div>
-      ))}
+    <main className="p-6 max-w-3xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">Optiloves Invest</h1>
+
+      <div className="grid gap-3">
+        {data.map((p) => (
+          <Link
+            key={p.id}
+            href={`/property/${p.id}`}
+            className="border p-3 rounded hover:bg-gray-50"
+          >
+            <div className="font-medium">{p.title}</div>
+            <div className="text-sm text-gray-600">
+              Price: {Number(p.price ?? 0).toLocaleString()} • Available:{' '}
+              {Number(p.availableTokens ?? 0).toLocaleString()}
+            </div>
+          </Link>
+        ))}
+      </div>
     </main>
   );
 }

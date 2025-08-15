@@ -1,129 +1,45 @@
-'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+﻿// frontend/src/app/property/[id]/page.tsx
+import BuyClient from './client-buy';
 
-type Details = {
-  id: string; title: string; city: string; country: string;
-  token_price_usd: number; available_tokens: number; description: string;
-};
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
-type Receipt = {
-  property_id: string;
-  tokens: number;
-  total_usd: number;
-  time: string;
-};
+async function getPropsList() {
+  const r = await fetch(`${BASE}/properties`, { cache: 'no-store' });
+  if (!r.ok) return [];
+  return r.json(); // [{ id, title, price, availableTokens }]
+}
 
-export default function Page() {
-  const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<Details | null>(null);
-  const [qty, setQty] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
-
-  useEffect(() => {
-    fetch(`http://127.0.0.1:5000/properties/${id}`)
-      .then(r => r.ok ? r.json() : Promise.reject('Failed to load'))
-      .then(setData)
-      .catch(e => setErr(String(e)));
-  }, [id]);
-
-  const clampedQty = useMemo(() => {
-    if (!data) return qty;
-    const n = Math.max(1, Math.floor(Number(qty) || 1));
-    return Math.min(n, data.available_tokens || 1);
-  }, [qty, data]);
-
-  const totalUsd = useMemo(() => {
-    if (!data) return 0;
-    return clampedQty * data.token_price_usd;
-  }, [clampedQty, data]);
-
-  function onQtyChange(v: string) {
-    setQty(Math.floor(Number(v) || 0));
+async function getPriceInfo(id: string) {
+  try {
+    const r = await fetch(`${BASE}/price/${id}`, { cache: 'no-store' });
+    if (!r.ok) return null;
+    return r.json(); // { ok, price, available }
+  } catch {
+    return null;
   }
+}
 
-  async function invest() {
-    if (!data) return;
-    setErr(null);
-    setReceipt(null);
-    setLoading(true);
-    try {
-      const res = await fetch('http://127.0.0.1:5000/invest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ property_id: data.id, tokens: clampedQty })
-      });
-      const out = await res.json();
-      if (!res.ok) throw new Error(out.error || res.statusText);
+export const dynamic = 'force-dynamic';
 
-      setData(d => d ? { ...d, available_tokens: d.available_tokens - out.tokens } : d);
-      setReceipt({
-        property_id: out.property_id,
-        tokens: out.tokens,
-        total_usd: out.total_usd,
-        time: new Date().toLocaleString()
-      });
-    } catch (e: any) {
-      setErr(e.message || 'Invest failed');
-    } finally {
-      setLoading(false);
-    }
+export default async function PropertyPage({ params }: { params: { id: string } }) {
+  const [list, info] = await Promise.all([getPropsList(), getPriceInfo(params.id)]);
+  const fromList = Array.isArray(list) ? list.find((x:any) => x.id === params.id) : null;
+
+  const title = fromList?.title ?? `Property ${params.id}`;
+  const price = Number(info?.price ?? fromList?.price ?? 0);
+  const available = Number(info?.available ?? fromList?.availableTokens ?? 0);
+
+  if (!fromList && !info) {
+    return <main className="p-6">Property not found.</main>;
   }
-
-  if (err) return <main style={{ padding: 20 }}>Error: {err}</main>;
-  if (!data) return <main style={{ padding: 20 }}>Loading…</main>;
-
-  const disabled = loading || clampedQty < 1 || clampedQty > data.available_tokens;
 
   return (
-    <main style={{ padding: 20 }}>
-      <a href="/" style={{ textDecoration: 'underline' }}>← Back to properties</a>
-      <h1 style={{ marginTop: 10 }}>{data.title}</h1>
-      <p>{data.city}, {data.country}</p>
-
-      <div style={{ border: '1px solid #ccc', padding: 12, marginTop: 12 }}>
-        <p>Token price: ${data.token_price_usd}</p>
-        <p>Available tokens: {data.available_tokens}</p>
-
-        <div style={{ marginTop: 8 }}>
-          <label>Tokens:&nbsp;
-            <input
-              type="number"
-              min={1}
-              value={clampedQty}
-              onChange={e => onQtyChange(e.target.value)}
-              style={{ width: 90 }}
-            />
-          </label>
-          <span style={{ marginLeft: 10 }}>Total: <strong>${totalUsd}</strong></span>
-          {clampedQty > data.available_tokens && (
-            <span style={{ marginLeft: 10, color: 'crimson' }}>
-              Not enough tokens available
-            </span>
-          )}
-          <button
-            disabled={disabled}
-            onClick={invest}
-            style={{ marginLeft: 10, padding: '6px 10px' }}
-          >
-            {loading ? 'Processing…' : 'Invest'}
-          </button>
-        </div>
-
-        {receipt && (
-          <div style={{ marginTop: 12, padding: 10, border: '1px solid #ddd', background: '#fafafa' }}>
-            <h3 style={{ margin: 0 }}>✅ Purchase Receipt</h3>
-            <p style={{ margin: '6px 0' }}>Property: {receipt.property_id}</p>
-            <p style={{ margin: '6px 0' }}>Tokens: {receipt.tokens}</p>
-            <p style={{ margin: '6px 0' }}>Total: ${receipt.total_usd}</p>
-            <p style={{ margin: '6px 0' }}>Time: {receipt.time}</p>
-          </div>
-        )}
-
-        <p style={{ marginTop: 12 }}>{data.description}</p>
+    <main className="p-6 max-w-3xl mx-auto space-y-4">
+      <h1 className="text-xl font-semibold">{title}</h1>
+      <div className="text-sm text-gray-600">
+        Token price: {price.toLocaleString()} — Available: {available.toLocaleString()}
       </div>
+      <BuyClient propId={params.id} price={price} />
     </main>
   );
 }
