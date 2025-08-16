@@ -1,45 +1,52 @@
-﻿// frontend/src/app/property/[id]/page.tsx
-import BuyClient from './client-buy';
+﻿// src/app/property/[id]/page.tsx
+import BuyClient from "./client-buy";
+import { notFound } from "next/navigation";
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
+export const dynamic = "force-dynamic";
 
-async function getPropsList() {
-  const r = await fetch(`${BASE}/properties`, { cache: 'no-store' });
-  if (!r.ok) return [];
-  return r.json(); // [{ id, title, price, availableTokens }]
-}
+type Property = {
+  id: string;
+  title: string;
+  price: number;
+  availableTokens: number;
+};
 
-async function getPriceInfo(id: string) {
+const FALLBACKS: Record<string, Omit<Property, "availableTokens">> = {
+  "kin-001": { id: "kin-001", title: "Kinshasa — Gombe Apartments", price: 120_000 },
+  "lua-001": { id: "lua-001", title: "Luanda — Ilha Offices",       price: 250_000 },
+};
+
+async function getProperty(id: string): Promise<Property | null> {
+  const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.optilovesinvest.com";
   try {
-    const r = await fetch(`${BASE}/price/${id}`, { cache: 'no-store' });
-    if (!r.ok) return null;
-    return r.json(); // { ok, price, available }
+    const res = await fetch(`${backend}/properties`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch properties");
+    const list = (await res.json()) as Property[];
+    return list.find((p) => p.id === id) ?? null;
   } catch {
-    return null;
+    // Fallback to static price if API is unreachable
+    const fb = FALLBACKS[id];
+    if (!fb) return null;
+    return { ...fb, availableTokens: 0 };
   }
 }
-
-export const dynamic = 'force-dynamic';
 
 export default async function PropertyPage({ params }: { params: { id: string } }) {
-  const [list, info] = await Promise.all([getPropsList(), getPriceInfo(params.id)]);
-  const fromList = Array.isArray(list) ? list.find((x:any) => x.id === params.id) : null;
+  const prop = await getProperty(params.id);
+  if (!prop) notFound();
 
-  const title = fromList?.title ?? `Property ${params.id}`;
-  const price = Number(info?.price ?? fromList?.price ?? 0);
-  const available = Number(info?.available ?? fromList?.availableTokens ?? 0);
-
-  if (!fromList && !info) {
-    return <main className="p-6">Property not found.</main>;
-  }
+  const { title, price, availableTokens } = prop;
 
   return (
-    <main className="p-6 max-w-3xl mx-auto space-y-4">
-      <h1 className="text-xl font-semibold">{title}</h1>
-      <div className="text-sm text-gray-600">
-        Token price: {price.toLocaleString()} — Available: {available.toLocaleString()}
+    <main style={{ maxWidth: 720, margin: "40px auto", padding: "0 16px" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>{title}</h1>
+
+      <div style={{ marginBottom: 18, color: "#444" }}>
+        Token price: {price.toLocaleString()} — Available: {availableTokens.toLocaleString()}
       </div>
-      <BuyClient propId={params.id} price={price} />
+
+      {/* Pass `id` (not propId) so it matches your BuyClient props */}
+      <BuyClient id={params.id} price={price} />
     </main>
   );
 }
