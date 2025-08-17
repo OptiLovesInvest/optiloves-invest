@@ -7,14 +7,41 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="logo">
-          <img src="assets/logo_horizontal.svg" alt="Optiloves Invest" height="32" />
-        </div>
-        <nav><a href="dashboard.html">Dashboard</a></nav>
-      </div>
-    </header>
+
+
+  <header>
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#0f2b32;color:#fff">
+    <!-- INLINE SVG LOGO -->
+    <a href="index.html" class="logo" aria-label="OptiLoves Home" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" aria-hidden="true" style="height:36px">
+        <defs>
+          <style>
+            .mint { fill: #38e088; }
+            .emerald { fill: #18a66f; }
+            .gold { fill: #ffd41f; }
+          </style>
+        </defs>
+        <path class="mint" d="M48 96v76l62 36v-26l-40-23V102z"/>
+        <path class="mint" d="M172 96v76l-62 36v-26l40-23V102z"/>
+        <path class="emerald" d="M58 92a92 92 0 0 1 104 0v16a110 110 0 0 0-104 0z"/>
+        <path class="gold" d="M110 62 l8 0 l9 146 l-19 10 l-19-10 z"/>
+        <path class="emerald" d="M97 98l-18 82l20 11V98z"/>
+        <path class="mint" d="M123 98l18 82l-20 11V98z"/>
+      </svg>
+      <!-- Wordmark -->
+      <span style="font:700 18px/1 Inter,Segoe UI,Roboto,Arial,sans-serif;color:#fff;">
+        Opti<span style="font-weight:800;color:#ffd41f">Loves</span> <span style="color:#38e088">Invest</span>
+      </span>
+    </a>
+
+    <nav style="display:flex;gap:18px">
+      <a href="index.html" style="color:#fff;text-decoration:none">Home</a>
+      <a href="dashboard.html" style="color:#fff;text-decoration:none">Dashboard</a>
+    </nav>
+  </div>
+</header>
+
+
 
     <main class="container" style="padding: 1rem 1.25rem;">
       <h1>Featured Properties</h1>
