@@ -24,12 +24,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="bg-gray-50 text-gray-900">
         <header className="w-full bg-black text-white">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-wide">Optiloves Invest</Link>
-            <nav className="flex items-center gap-4 text-sm">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
+            <Link href="/" className="font-semibold tracking-wide flex items-center gap-2">
+              <img src="/logo.png" alt="logo" className="h-7 w-7 rounded" />
+              Optiloves Invest
+            </Link>
+            <nav className="ml-auto flex items-center gap-4 text-sm">
               <Link href="/">Properties</Link>
+              <Link href="/account">Account</Link>
               <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
+              <span className="opacity-60">|</span>
+              <span className="opacity-80">Language:</span>
+              <Link href="/?lng=en">EN</Link>
+              <Link href="/?lng=fr">FR</Link>
+              <Link href="/?lng=lg">LG</Link>
+              <Link href="/?lng=pt">PT</Link>
             </nav>
           </div>
         </header>
