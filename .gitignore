@@ -6,3 +6,11 @@ backend/__pycache__/
 .env
 frontend/.env.local
 backend/.env
+
+# Environment secrets
+
+.env.*
+
+*.pem
+*.key
+*.json.key
