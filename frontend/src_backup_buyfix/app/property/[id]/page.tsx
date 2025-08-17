@@ -17,8 +17,7 @@ const FALLBACKS: Record<string, Omit<Property, "availableTokens">> = {
 };
 
 async function getProperty(id: string): Promise<Property | null> {
-  // Use env var in production; fall back to your live Render backend
-  const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "https://optiloves-backend.onrender.com";
+  const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.optilovesinvest.com";
   try {
     const res = await fetch(`${backend}/properties`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch properties");

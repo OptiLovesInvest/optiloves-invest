@@ -1,259 +1,164 @@
-# app.py
-import os
-import time
-import uuid
-import requests
-from flask import Flask, request, jsonify
+# app.py — Stripe + Postgres + CORS (business-ready MVP)
+import os, decimal
+from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+import stripe
 
-# --- env ---
-from dotenv import load_dotenv
-load_dotenv()
+from sqlalchemy import create_engine, Column, Integer, String, Numeric, select, text, UniqueConstraint
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# --- Optional Sentry (set SENTRY_DSN in env to enable) ---
-try:
-    import sentry_sdk
-    from sentry_sdk.integrations.flask import FlaskIntegration
-    SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
-    if SENTRY_DSN:
-        sentry_sdk.init(dsn=SENTRY_DSN, integrations=[FlaskIntegration()])
-except Exception:
-    pass
+# ---------- Config ----------
+DATABASE_URL = os.environ.get("DATABASE_URL")  # e.g. postgres://... from Render Postgres
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")  # set to your Vercel URL
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
 
-# --- Rate limiting ---
-limiter = Limiter(get_remote_address, app=app, default_limits=["200 per hour"])
-
-# --- Demo catalog (in-memory; resets on deploy) ---
-PROPERTIES = [
-    {"id": "kin-001", "title": "Kinshasa — Gombe Apartments", "price": 120000, "availableTokens": 4995},
-    {"id": "lua-001", "title": "Luanda — Ilha Offices",       "price": 250000, "availableTokens": 2999},
-]
-def find_property(pid: str):
-    return next((p for p in PROPERTIES if p["id"] == pid), None)
-
-# --- Supabase (SDK if legacy key; otherwise REST) ---
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
-SUPABASE_MODE = os.environ.get("SUPABASE_MODE", "auto").lower()  # auto|rest|sdk
-
-sb = None
-def _use_sdk_with_key(key: str) -> bool:
-    return "." in key and not key.startswith("sb_")
-
-if SUPABASE_URL and SUPABASE_SERVICE_KEY and SUPABASE_MODE != "rest" and _use_sdk_with_key(SUPABASE_SERVICE_KEY):
-    try:
-        from supabase import create_client  # type: ignore
-        sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-        print("Supabase SDK enabled")
-    except Exception as e:
-        print("Supabase SDK init failed, falling back to REST:", e)
-        sb = None
-else:
-    print("Supabase SDK disabled (using REST)")
-
-def insert_order_row(row: dict):
-    """
-    Insert into public.orders.
-    Uses SDK if available; otherwise REST (works with sb_secret_*).
-    """
-    if sb:
-        return sb.table("orders").insert(row).execute()
-    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        raise RuntimeError("Supabase config missing")
-    url = f"{SUPABASE_URL}/rest/v1/orders"
-    headers = {
-        "apikey": SUPABASE_SERVICE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-    }
-    r = requests.post(url, headers=headers, json=row, timeout=10)
-    if r.status_code not in (200, 201):
-        raise RuntimeError(f"REST insert failed: {r.status_code} {r.text}")
-    return r.json()
-
-def update_order_status(order_id: str, status: str):
-    if sb:
-        return sb.table("orders").update({"status": status}).eq("id", order_id).execute()
-    url = f"{SUPABASE_URL}/rest/v1/orders?id=eq.{order_id}"
-    headers = {
-        "apikey": SUPABASE_SERVICE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-    }
-    r = requests.patch(url, headers=headers, json={"status": status}, timeout=10)
-    if r.status_code not in (200, 204):
-        raise RuntimeError(f"REST update failed: {r.status_code} {r.text}")
-    return True
-
-# --- Stripe ---
-import stripe  # type: ignore
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 stripe.api_key = STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
-# Where Stripe should return the user after payment
-FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "https://app.optilovesinvest.com")
-# Keep MVP charge small (override via env)
-CHECKOUT_PRICE_USD = int(os.environ.get("CHECKOUT_PRICE_USD", "1"))
+# ---------- DB setup ----------
+Base = declarative_base()
+engine = create_engine(DATABASE_URL, pool_pre_ping=True) if DATABASE_URL else create_engine("sqlite:///local.db")
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
-def cents(usd: int) -> int:
-    return int(usd) * 100
+class Property(Base):
+    __tablename__ = "properties"
+    id = Column(String, primary_key=True)           # e.g., "kin-001"
+    title = Column(String, nullable=False)
+    price = Column(Integer, nullable=False)         # USD per token (integer dollars)
+    available_tokens = Column(Integer, nullable=False)
 
-# --- Routes ---
+class Order(Base):
+    __tablename__ = "orders"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    property_id = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    email = Column(String, nullable=True)
+    stripe_session_id = Column(String, nullable=False)
+    amount_usd = Column(Integer, nullable=False)
+    __table_args__ = (UniqueConstraint("stripe_session_id", name="uq_orders_stripe_session"),)
+
+def init_db():
+    Base.metadata.create_all(engine)
+    # seed baseline properties if missing
+    with SessionLocal() as s:
+        existing = {p.id for p in s.execute(select(Property)).scalars()}
+        seeds = [
+            ("kin-001", "Kinshasa — Gombe Apartments", 120_000, 4995),
+            ("lua-001", "Luanda — Ilha Offices",       250_000, 2999),
+        ]
+        for pid, title, price, avail in seeds:
+            if pid not in existing:
+                s.add(Property(id=pid, title=title, price=price, available_tokens=avail))
+        s.commit()
+
+init_db()
+
+# ---------- Routes ----------
+@app.get("/")
+def root():
+    return jsonify({"ok": True, "service": "optiloves-backend"})
+
 @app.get("/health")
 def health():
-    return {"ok": True, "ts": int(time.time()), "ver": "buy-returns-url-v2"}
+    return jsonify({"ok": True})
 
 @app.get("/properties")
-def properties():
-    return jsonify(PROPERTIES)
+def list_properties():
+    with SessionLocal() as s:
+        rows = s.execute(select(Property)).scalars().all()
+        return jsonify([
+            {
+                "id": r.id,
+                "title": r.title,
+                "price": int(r.price),
+                "availableTokens": int(r.available_tokens),
+            } for r in rows
+        ])
 
-@app.post("/buy")
-@limiter.limit("10 per minute")
-def buy():
-    """
-    Creates a PENDING order + Stripe Checkout session.
-    We DO NOT decrement availability here; we do it on successful webhook.
-    """
-    data = request.get_json(force=True) or {}
-    prop_id = str(data.get("property_id") or "").strip()
-    wallet  = str(data.get("wallet") or "unknown")[:128]
-    try:
-        qty = int(data.get("quantity", 0))
-    except Exception:
-        qty = 0
-
-    p = find_property(prop_id)
-    if not p:
-        return jsonify({"ok": False, "error": "not_found"}), 404
-    if qty <= 0:
-        return jsonify({"ok": False, "error": "bad_qty"}), 400
-
-    order_id = f"order_{uuid.uuid4().hex[:16]}"
-
-    # Log as PENDING (best-effort)
-    try:
-        insert_order_row({
-            "id": order_id,
-            "property_id": prop_id,
-            "wallet": wallet,
-            "quantity": qty,
-            "unit_price_usd": CHECKOUT_PRICE_USD,
-            "total_usd": CHECKOUT_PRICE_USD * qty,
-            "status": "PENDING_PAYMENT",
-            "ts": int(time.time()),
-        })
-    except Exception as e:
-        print("Order logging failed:", e)
-
-    success_url = f"{FRONTEND_BASE_URL}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}&order_id={order_id}"
-    cancel_url  = f"{FRONTEND_BASE_URL}/checkout/cancel?order_id={order_id}"
-
+@app.post("/checkout")
+def checkout():
     if not STRIPE_SECRET_KEY:
-        # No key configured
-        return jsonify({"ok": False, "error": "stripe_key_missing"}), 500
+        abort(400, "Stripe not configured (missing STRIPE_SECRET_KEY)")
+    data = request.get_json(force=True) or {}
+    prop_id = data.get("property_id")
+    qty = int(data.get("quantity", 1))
+    email = (data.get("email") or "").strip() or None
 
-    try:
-        session = stripe.checkout.Session.create(
-            mode="payment",
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={
-                "order_id": order_id,
-                "property_id": prop_id,
-                "quantity": str(qty),
-                "wallet": wallet,
-            },
-            line_items=[{
-                "quantity": qty,
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": cents(CHECKOUT_PRICE_USD),
-                    "product_data": {"name": p["title"]},
-                },
-            }],
-        )
-        print("BUY", order_id, "URL", session.url)
-        return jsonify({"ok": True, "url": session.url, "order_id": order_id})
-    except Exception as e:
-        print("BUY_ERROR", order_id, str(e))
-        return jsonify({"ok": False, "error": "stripe_failed", "detail": str(e)}), 500
+    if qty < 1: abort(400, "Invalid quantity")
+
+    with SessionLocal() as s:
+        p = s.get(Property, prop_id)
+        if not p: abort(400, "Property not found")
+        if p.available_tokens < qty: abort(400, "Not enough tokens available")
+
+        # Stripe price in cents
+        unit_amount_cents = int(p.price) * 100
+
+        try:
+            session = stripe.checkout.Session.create(
+                mode="payment",
+                customer_email=email,
+                line_items=[{
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": p.title, "metadata": {"property_id": p.id}},
+                        "unit_amount": unit_amount_cents,
+                    },
+                    "quantity": qty,
+                }],
+                success_url=f"{FRONTEND_ORIGIN}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{FRONTEND_ORIGIN}/checkout/cancel",
+                metadata={"property_id": p.id, "quantity": str(qty), "email": email or ""},
+            )
+            return jsonify({"ok": True, "checkout_url": session.url})
+        except Exception as e:
+            abort(400, f"Stripe error: {e}")
 
 @app.post("/stripe/webhook")
 def stripe_webhook():
-    """
-    Handles checkout.session.completed.
-    - Marks order as PAID
-    - Decrements in-memory availability
-    """
-    payload = request.get_data(as_text=True)
-    sig = request.headers.get("Stripe-Signature", "")
+    if not STRIPE_WEBHOOK_SECRET:
+        abort(400, "Webhook secret not set")
+
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature", "")
+
     try:
-        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return str(e), 400
 
     if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        md = session.get("metadata", {}) or {}
-        order_id = md.get("order_id", "")
-        prop_id = md.get("property_id", "")
-        qty = int(md.get("quantity", "1") or "1")
+        sess = event["data"]["object"]
+        session_id = sess.get("id")
+        meta = sess.get("metadata") or {}
+        prop_id = meta.get("property_id")
+        qty = int(meta.get("quantity", "1"))
+        email = meta.get("email") or (sess.get("customer_details") or {}).get("email")
+        amount_total = int((sess.get("amount_total") or 0) / 100)
 
-        # Mark order paid (best-effort)
-        try:
-            if order_id:
-                update_order_status(order_id, "PAID")
-        except Exception as e:
-            print("update_order_status failed:", e)
+        with SessionLocal() as s:
+            # idempotent: skip if already recorded
+            exists = s.execute(select(Order).where(Order.stripe_session_id == session_id)).first()
+            if not exists:
+                # decrement inventory
+                p = s.get(Property, prop_id)
+                if p:
+                    p.available_tokens = max(0, int(p.available_tokens) - qty)
+                # record order
+                s.add(Order(
+                    property_id=prop_id,
+                    quantity=qty,
+                    email=email,
+                    stripe_session_id=session_id,
+                    amount_usd=amount_total,
+                ))
+                s.commit()
 
-        # Decrement availability now that it's actually paid
-        p = find_property(prop_id)
-        if p:
-            p["availableTokens"] = max(0, int(p["availableTokens"]) - qty)
-
-    return jsonify({"ok": True})
-
-@app.post("/airdrop")
-def airdrop():
-    data = request.get_json(force=True) or {}
-    wallet = str(data.get("wallet","")).strip()
-    if not wallet:
-        return jsonify({"ok": False, "error": "wallet required"}), 400
-    rpc_url = "https://api.devnet.solana.com"
-    payload = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "requestAirdrop",
-        "params": [wallet, 1_000_000_000]  # 1 SOL
-    }
-    try:
-        r = requests.post(rpc_url, json=payload, timeout=15)
-        j = r.json()
-        if "result" in j:
-            return jsonify({"ok": True, "tx": j["result"]})
-        return jsonify({"ok": False, "error": j.get("error")}), 500
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-# (Optional) quick env debug
-@app.get("/_debug")
-def _debug():
-    def mode(k): 
-        return "test" if k.startswith("sk_test") else ("live" if k.startswith("sk_live") else "missing")
-    return {
-        "stripe_key_mode": mode(STRIPE_SECRET_KEY or ""),
-        "webhook_set": bool(STRIPE_WEBHOOK_SECRET),
-        "frontend_base_url": FRONTEND_BASE_URL,
-        "price_per_unit_usd": CHECKOUT_PRICE_USD,
-    }
+    return "", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")))
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port)

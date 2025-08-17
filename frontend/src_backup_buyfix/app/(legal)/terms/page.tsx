@@ -1,4 +1,4 @@
-﻿// frontend/src/app/(legal)/terms/page.tsx
+// frontend/src/app/(legal)/terms/page.tsx
 export const dynamic = 'force-dynamic';
 
 export default function Terms() {
@@ -11,10 +11,9 @@ export default function Terms() {
       <h2 className="text-lg font-semibold">Risk Notice</h2>
       <p>Digital assets are volatile and may result in loss of capital.</p>
       <h2 className="text-lg font-semibold">Limitation of Liability</h2>
-      <p>Service is provided â€œas isâ€ without warranties.</p>
+      <p>Service is provided “as is” without warranties.</p>
       <h2 className="text-lg font-semibold">Contact</h2>
       <p>hello@optilovesinvest.com</p>
     </main>
   );
 }
-

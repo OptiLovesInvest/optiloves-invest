@@ -1,4 +1,4 @@
-﻿// frontend/src/app/(legal)/privacy/page.tsx
+// frontend/src/app/(legal)/privacy/page.tsx
 export const dynamic = 'force-dynamic';
 
 export default function Privacy() {
@@ -17,4 +17,3 @@ export default function Privacy() {
     </main>
   );
 }
-
