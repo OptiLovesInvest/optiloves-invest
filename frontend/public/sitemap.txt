@@ -1,0 +1,5 @@
+﻿https://app.optilovesinvest.com/
+https://app.optilovesinvest.com/orders
+https://app.optilovesinvest.com/checkout/success
+https://app.optilovesinvest.com/checkout/cancel
+https://app.optilovesinvest.com/status
