@@ -1,53 +1,37 @@
-﻿// src/app/property/[id]/page.tsx
-import BuyClient from "./client-buy";
-import { notFound } from "next/navigation";
+﻿// frontend/src/app/property/[id]/page.tsx
+import { fetchPropertyById } from "../../../lib/api";
+import ClientBuy from "./client-buy";
 
+type PageProps = { params: { id: string } };
 export const dynamic = "force-dynamic";
 
-type Property = {
-  id: string;
-  title: string;
-  price: number;
-  availableTokens: number;
-};
+export default async function PropertyPage({ params }: PageProps) {
+  const p = await fetchPropertyById(params.id);
 
-const FALLBACKS: Record<string, Omit<Property, "availableTokens">> = {
-  "kin-001": { id: "kin-001", title: "Kinshasa — Gombe Apartments", price: 120_000 },
-  "lua-001": { id: "lua-001", title: "Luanda — Ilha Offices",       price: 250_000 },
-};
-
-async function getProperty(id: string): Promise<Property | null> {
-  // Use env var in production; fall back to your live Render backend
-  const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "https://optiloves-backend.onrender.com";
-  try {
-    const res = await fetch(`${backend}/properties`, { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed to fetch properties");
-    const list = (await res.json()) as Property[];
-    return list.find((p) => p.id === id) ?? null;
-  } catch {
-    // Fallback to static price if API is unreachable
-    const fb = FALLBACKS[id];
-    if (!fb) return null;
-    return { ...fb, availableTokens: 0 };
+  if (!p) {
+    return (
+      <main className="mx-auto max-w-3xl p-6">
+        <h1 className="text-xl font-bold">Property not found</h1>
+        <p className="mt-2 opacity-80">ID: {params.id}</p>
+        <a href="/" className="mt-4 inline-block underline">← Back</a>
+      </main>
+    );
   }
-}
-
-export default async function PropertyPage({ params }: { params: { id: string } }) {
-  const prop = await getProperty(params.id);
-  if (!prop) notFound();
-
-  const { title, price, availableTokens } = prop;
 
   return (
-    <main style={{ maxWidth: 720, margin: "40px auto", padding: "0 16px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>{title}</h1>
+    <main className="mx-auto max-w-3xl p-6 space-y-4">
+      <a href="/" className="text-sm underline">← Back</a>
+      <h1 className="text-2xl font-bold">{p.title}</h1>
 
-      <div style={{ marginBottom: 18, color: "#444" }}>
-        Token price: {price.toLocaleString()} — Available: {availableTokens.toLocaleString()}
+      <div className="rounded-xl border p-4 space-y-2">
+        <div className="text-sm opacity-80">ID: {p.id}</div>
+        <div className="text-sm">Price (USD): <span className="font-semibold">${p.price}</span></div>
+        <div className="text-sm opacity-80">{p.availableTokens} tokens available</div>
       </div>
 
-      {/* Pass `id` (not propId) so it matches your BuyClient props */}
-      <BuyClient id={params.id} price={price} />
+      <ClientBuy propertyId={p.id} />
+
+      <footer className="pt-4 text-xs opacity-70">© {new Date().getFullYear()} Optiloves Invest</footer>
     </main>
   );
 }

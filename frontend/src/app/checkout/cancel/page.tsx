@@ -1,12 +1,11 @@
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
-export default function Cancel() {
+export default function CheckoutCancel() {
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-2">Payment Cancelled</h1>
-      <p className="text-sm">You can try again anytime.</p>
+    <main className="mx-auto max-w-2xl p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Payment canceled</h1>
+      <p className="opacity-80">No charge was made. You can try again anytime.</p>
+      <a className="underline" href="/">← Back to properties</a>
     </main>
   );
 }
+
 
