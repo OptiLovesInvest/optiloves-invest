@@ -1,164 +1,154 @@
-# app.py — Stripe + Postgres + CORS (business-ready MVP)
-import os, decimal
-from flask import Flask, jsonify, request, abort
+# backend/app.py
+import os
+import json
+import time
+import uuid
+from pathlib import Path
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import stripe
 
-from sqlalchemy import create_engine, Column, Integer, String, Numeric, select, text, UniqueConstraint
-from sqlalchemy.orm import sessionmaker, declarative_base
+# ---- Config ---------------------------------------------------------------
 
-# ---------- Config ----------
-DATABASE_URL = os.environ.get("DATABASE_URL")  # e.g. postgres://... from Render Postgres
-FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")  # set to your Vercel URL
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+# Stripe (keep your LIVE key in Render env)
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+# Frontend base (no trailing slash is enforced)
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://app.optilovesinvest.com").rstrip("/")
+
+# Price per token (USD) for MVP – change later if needed
+USD_PER_TOKEN = float(os.getenv("USD_PER_TOKEN", "1.0"))
+
+# Paths
+ROOT = Path(__file__).resolve().parent
+PROPERTIES_JSON = ROOT / "properties.json"
+
+# ---- App ------------------------------------------------------------------
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
 
-stripe.api_key = STRIPE_SECRET_KEY
+# CORS: allow your dev + preview + production frontends
+CORS(
+    app,
+    resources={r"*": {
+        "origins": [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://*.vercel.app",
+            "https://app.optilovesinvest.com",
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+    }}
+)
 
-# ---------- DB setup ----------
-Base = declarative_base()
-engine = create_engine(DATABASE_URL, pool_pre_ping=True) if DATABASE_URL else create_engine("sqlite:///local.db")
-SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+# ---- Helpers --------------------------------------------------------------
 
-class Property(Base):
-    __tablename__ = "properties"
-    id = Column(String, primary_key=True)           # e.g., "kin-001"
-    title = Column(String, nullable=False)
-    price = Column(Integer, nullable=False)         # USD per token (integer dollars)
-    available_tokens = Column(Integer, nullable=False)
+def load_properties():
+    if PROPERTIES_JSON.exists():
+        with PROPERTIES_JSON.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    # Fallback (shouldn't happen in your repo)
+    return []
 
-class Order(Base):
-    __tablename__ = "orders"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    property_id = Column(String, nullable=False)
-    quantity = Column(Integer, nullable=False)
-    email = Column(String, nullable=True)
-    stripe_session_id = Column(String, nullable=False)
-    amount_usd = Column(Integer, nullable=False)
-    __table_args__ = (UniqueConstraint("stripe_session_id", name="uq_orders_stripe_session"),)
+def find_property(prop_id: str):
+    for p in load_properties():
+        if p.get("id") == prop_id:
+            return p
+    return None
 
-def init_db():
-    Base.metadata.create_all(engine)
-    # seed baseline properties if missing
-    with SessionLocal() as s:
-        existing = {p.id for p in s.execute(select(Property)).scalars()}
-        seeds = [
-            ("kin-001", "Kinshasa — Gombe Apartments", 120_000, 4995),
-            ("lua-001", "Luanda — Ilha Offices",       250_000, 2999),
-        ]
-        for pid, title, price, avail in seeds:
-            if pid not in existing:
-                s.add(Property(id=pid, title=title, price=price, available_tokens=avail))
-        s.commit()
+def mk_order_id() -> str:
+    return f"order_{uuid.uuid4().hex[:16]}"
 
-init_db()
-
-# ---------- Routes ----------
-@app.get("/")
-def root():
-    return jsonify({"ok": True, "service": "optiloves-backend"})
+# ---- Routes ---------------------------------------------------------------
 
 @app.get("/health")
 def health():
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "ts": int(time.time()), "ver": "buy-returns-url-v3"})
 
 @app.get("/properties")
-def list_properties():
-    with SessionLocal() as s:
-        rows = s.execute(select(Property)).scalars().all()
-        return jsonify([
-            {
-                "id": r.id,
-                "title": r.title,
-                "price": int(r.price),
-                "availableTokens": int(r.available_tokens),
-            } for r in rows
-        ])
+def properties():
+    """
+    Returns the simple list used by the frontend:
+    [{ id, title, price, availableTokens }]
+    """
+    return jsonify(load_properties())
 
-@app.post("/checkout")
-def checkout():
-    if not STRIPE_SECRET_KEY:
-        abort(400, "Stripe not configured (missing STRIPE_SECRET_KEY)")
-    data = request.get_json(force=True) or {}
-    prop_id = data.get("property_id")
-    qty = int(data.get("quantity", 1))
-    email = (data.get("email") or "").strip() or None
-
-    if qty < 1: abort(400, "Invalid quantity")
-
-    with SessionLocal() as s:
-        p = s.get(Property, prop_id)
-        if not p: abort(400, "Property not found")
-        if p.available_tokens < qty: abort(400, "Not enough tokens available")
-
-        # Stripe price in cents
-        unit_amount_cents = int(p.price) * 100
-
-        try:
-            session = stripe.checkout.Session.create(
-                mode="payment",
-                customer_email=email,
-                line_items=[{
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {"name": p.title, "metadata": {"property_id": p.id}},
-                        "unit_amount": unit_amount_cents,
-                    },
-                    "quantity": qty,
-                }],
-                success_url=f"{FRONTEND_ORIGIN}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{FRONTEND_ORIGIN}/checkout/cancel",
-                metadata={"property_id": p.id, "quantity": str(qty), "email": email or ""},
-            )
-            return jsonify({"ok": True, "checkout_url": session.url})
-        except Exception as e:
-            abort(400, f"Stripe error: {e}")
-
-@app.post("/stripe/webhook")
-def stripe_webhook():
-    if not STRIPE_WEBHOOK_SECRET:
-        abort(400, "Webhook secret not set")
-
-    payload = request.data
-    sig_header = request.headers.get("Stripe-Signature", "")
-
+@app.post("/buy")
+def buy():
+    """
+    Creates a Stripe Checkout Session and returns its URL.
+    Body: { property_id: str, quantity: int, wallet: str }
+    Response: { ok: true, order_id: str, url: str }
+    """
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+        data = request.get_json(force=True) or {}
+        property_id = str(data.get("property_id", "")).strip()
+        quantity = int(data.get("quantity", 1))
+        wallet = str(data.get("wallet", "")).strip()
+
+        if not property_id:
+            return jsonify({"ok": False, "error": "property_id required"}), 400
+        if quantity < 1:
+            quantity = 1  # clamp minimal
+        if quantity > 1000:
+            quantity = 1000  # guardrail
+
+        prop = find_property(property_id)
+        if not prop:
+            return jsonify({"ok": False, "error": f"unknown property_id: {property_id}"}), 404
+
+        # MVP token pricing: $1 per token (change when you want real pricing)
+        unit_amount_cents = int(round(USD_PER_TOKEN * 100))
+
+        # Build clean return URLs
+        success_url = f"{FRONTEND_URL}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{FRONTEND_URL}/checkout/cancel"
+
+        # Create Stripe Checkout Session (Live if you set a live key)
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": f"{prop.get('title', 'Optiloves')} ({property_id})",
+                        # Optionally include an image URL here if you have one
+                    },
+                    "unit_amount": unit_amount_cents,
+                },
+                "quantity": quantity,
+            }],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "property_id": property_id,
+                "wallet": wallet,
+                "quantity": str(quantity),
+                "order_hint": "tokenized_real_estate",
+            },
+            # You can restrict payment methods or enable automatic_tax later if needed
+        )
+
+        order_id = mk_order_id()
+        return jsonify({"ok": True, "order_id": order_id, "url": session.url})
+
+    except stripe.error.StripeError as e:
+        # Known Stripe errors
+        return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
-        return str(e), 400
+        # Unexpected exceptions
+        return jsonify({"ok": False, "error": f"server_error: {e}"}), 500
 
-    if event["type"] == "checkout.session.completed":
-        sess = event["data"]["object"]
-        session_id = sess.get("id")
-        meta = sess.get("metadata") or {}
-        prop_id = meta.get("property_id")
-        qty = int(meta.get("quantity", "1"))
-        email = meta.get("email") or (sess.get("customer_details") or {}).get("email")
-        amount_total = int((sess.get("amount_total") or 0) / 100)
 
-        with SessionLocal() as s:
-            # idempotent: skip if already recorded
-            exists = s.execute(select(Order).where(Order.stripe_session_id == session_id)).first()
-            if not exists:
-                # decrement inventory
-                p = s.get(Property, prop_id)
-                if p:
-                    p.available_tokens = max(0, int(p.available_tokens) - qty)
-                # record order
-                s.add(Order(
-                    property_id=prop_id,
-                    quantity=qty,
-                    email=email,
-                    stripe_session_id=session_id,
-                    amount_usd=amount_total,
-                ))
-                s.commit()
+# (Optional) simple /airdrop stub so builds never fail if called; safe no-op
+@app.post("/airdrop")
+def airdrop_stub():
+    return jsonify({"ok": False, "error": "airdrop_not_enabled"}), 501
 
-    return "", 200
+
+# ---- Local dev ------------------------------------------------------------
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "5000"))
-    app.run(host="0.0.0.0", port=port)
+    # For local testing only. In Render, Gunicorn will run the app.
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
