@@ -1,23 +1,15 @@
-// src/app/layout.tsx
-import "./globals.css";
-import type { Metadata } from "next";
-import SiteHeader from "../components/SiteHeader";
+﻿import "./globals.css";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Optiloves Invest",
-  description: "Tokenized access to African real estate. $1 per token.",
+  description: "Tokenized access to African real estate.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-white text-gray-900 antialiased">
-        <SiteHeader />
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <body className="bg-neutral-50 text-neutral-900 antialiased">
+        {children}
       </body>
     </html>
   );
