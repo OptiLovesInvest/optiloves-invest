@@ -1,90 +1,81 @@
 ﻿"use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-const BASE = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "").replace(/\/+$/, "");
 
 export default function ClientBuy({ propertyId }: { propertyId: string }) {
   const [qty, setQty] = useState(1);
-  const [wallet, setWallet] = useState("test1"); // demo wallet field
-  const [status, setStatus] = useState<string | null>(null);
+  const [wallet, setWallet] = useState("test1");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  async function handleBuy() {
-    setStatus(null);
-    if (qty < 1) return setStatus("Quantity must be at least 1");
-    setLoading(true);
+  async function onBuy() {
     try {
-      const res = await fetch(`${BASE}/buy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ property_id: propertyId, quantity: qty, wallet }),
-      });
+      setLoading(true);
 
-      const json = await res.json().catch(() => ({} as any));
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/buy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            property_id: propertyId,
+            quantity: qty,
+            wallet,
+          }),
+        }
+      );
 
-      if (!res.ok || json?.ok === false) {
-        throw new Error(json?.error ?? `Buy failed (${res.status})`);
+      const data = await res.json();
+      if (!data?.ok || !data?.url) {
+        throw new Error(data?.error || "Buy failed");
       }
 
-      // ✅ Redirect to Stripe Checkout if backend returns a URL
-      if (json?.url) {
-        window.location.href = json.url;
-        return;
+      // Save URL for a “Pending” page (or future retry button)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("lastCheckoutUrl", data.url);
+        // Open Stripe Checkout in a NEW TAB so your site can still show Cancel/Help
+        window.open(data.url, "_blank", "noopener,noreferrer");
       }
 
-      // Fallback: show tx or generic success
-      if (json?.tx_signature) {
-        setStatus(`✅ Success. Tx: ${json.tx_signature}`);
-      } else {
-        setStatus(`✅ Order created.`);
-      }
+      // Send this tab somewhere helpful (see note below)
+      router.push("/checkout/pending"); // or "/" if you don't create a Pending page
     } catch (e: any) {
-      setStatus(`❌ ${e?.message ?? "Unknown error"}`);
+      alert(e?.message || "Buy failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="mt-4 space-y-3 rounded-xl border p-4">
-      <div className="text-sm font-semibold">Buy tokens</div>
-
-      <div className="flex gap-3 items-center">
-        <label className="text-sm">Qty</label>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <label className="text-sm">Quantity</label>
         <input
           type="number"
           min={1}
           value={qty}
-          onChange={(e) => setQty(parseInt(e.target.value || "1", 10))}
-          className="w-24 rounded border px-2 py-1"
+          onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+          className="w-20 rounded border px-2 py-1"
         />
       </div>
 
-      <div className="flex gap-3 items-center">
+      <div className="flex items-center gap-2">
         <label className="text-sm">Wallet</label>
         <input
-          type="text"
           value={wallet}
           onChange={(e) => setWallet(e.target.value)}
-          className="w-64 rounded border px-2 py-1"
-          placeholder="test1 (demo) or your address"
+          className="w-56 rounded border px-2 py-1"
         />
       </div>
 
       <button
-        onClick={handleBuy}
+        onClick={onBuy}
         disabled={loading}
-        className="rounded-lg border px-4 py-2 hover:shadow-sm disabled:opacity-60"
+        className="rounded-md border px-4 py-2 disabled:opacity-50"
       >
-        {loading ? "Processing..." : "Buy"}
+        {loading ? "Opening Stripe…" : "Buy"}
       </button>
-
-      <div className="text-xs opacity-70">
-        You’ll be redirected to Stripe Checkout to complete payment.
-      </div>
-
-      {status && <div className="text-sm">{status}</div>}
     </div>
   );
 }
