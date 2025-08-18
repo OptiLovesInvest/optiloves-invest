@@ -64,7 +64,8 @@ def mk_order_id() -> str:
 
 @app.get("/health")
 def health():
-    return jsonify({"ok": True, "ts": int(time.time()), "ver": "buy-returns-url-v3"})
+    return jsonify({"ok": True, "ts": int(time.time()), "ver": "buy-returns-url-v4"})
+
 
 @app.get("/properties")
 def properties():
