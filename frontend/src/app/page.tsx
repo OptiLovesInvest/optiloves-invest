@@ -1,122 +1,87 @@
-﻿import PropertyCard, { type Property } from "../components/PropertyCard";
-const fix = (s?: string) => {
-  if (!s) return "";
-  try {
-    // Attempt to reverse common mojibake (Latin-1 read as UTF-8)
-    const dec = decodeURIComponent(escape(s));
-    if (dec && typeof dec === "string") s = dec;
-  } catch {}
-  return s
-    .replace(/Â©/g, "©")
-    .replace(/â€”/g, "—")
-    .replace(/â€“/g, "–")
-    .replace(/â€˜/g, "‘")
-    .replace(/â€™/g, "’")
-    .replace(/â€œ/g, "“")
-    .replace(/â€�/g, "”");
-};
-
 export const dynamic = "force-dynamic";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
 
-async function getProperties(): Promise<Property[]> {
+async function safeList() {
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
   const url = `${base.replace(/\/$/, "")}/properties`;
-
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
-    const list = Array.isArray(data) ? data : Array.isArray(data?.value) ? data.value : [];
-    return list
-      .map((x: any) => ({
-        id: x.id,
-        title: fix(x.title),
-        price: Number(x.price ?? x.token_price ?? 0),
-        availableTokens: Number(x.availableTokens ?? x.available_tokens ?? 0),
-      }))
-      .filter((p) => p?.id);
+    const list = Array.isArray(data) ? data : Array.isArray((data as any)?.value) ? (data as any).value : [];
+    return list.map((x: any) => ({
+      id: String(x.id || ""),
+      title: String(x.title || x.id || ""),
+      price: Number(x.price ?? x.token_price ?? 0),
+      available: Number(x.availableTokens ?? x.available_tokens ?? 0),
+    }));
   } catch {
     return [];
   }
 }
 
 export default async function Page() {
-  const props = await getProperties();
-
+  const list = await safeList();
   return (
     <main className="min-h-screen bg-neutral-50">
-      {/* Top bar */}
-      <header className="border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-[#2e7d32] via-[#f9a825] to-[#c62828]" />
-            <span className="font-semibold tracking-tight">Optiloves Invest</span>
-          </div>
-          <nav className="hidden sm:flex items-center gap-5 text-sm text-neutral-600">
-            <a href="#properties" className="hover:text-black">Properties</a>
-            <a href="#" className="hover:text-black">Account</a>
-            <a href="#" className="hover:text-black">Terms</a>
-            <a href="#" className="hover:text-black">Privacy</a>
+      <div className="mx-auto max-w-5xl p-6 space-y-8">
+        <header className="flex items-center justify-between">
+          <h1 className="text-xl font-bold tracking-tight">Optiloves Invest</h1>
+          <nav className="text-sm text-neutral-600 space-x-4">
+            <a className="hover:text-black" href="/terms">Terms</a>
+            <a className="hover:text-black" href="/privacy">Privacy</a>
           </nav>
-        </div>
-      </header>
+        </header>
 
-      {/* Hero */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-          <div className="rounded-3xl border bg-neutral-50 p-8 sm:p-10">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tokenized access to African real estate.</h1>
-                <p className="text-neutral-600 mt-2">Invest from $1 per token. Focus: Kinshasa &amp; Luanda.</p>
-              </div>
-              <div className="flex gap-3">
-                <a href="#properties" className="rounded-xl px-4 py-2.5 text-sm font-medium bg-black text-white hover:bg-neutral-800 transition">View properties</a>
-                <a href="#" className="rounded-xl px-4 py-2.5 text-sm font-medium border hover:bg-neutral-100 transition">Learn more</a>
-              </div>
-            </div>
+        <section className="rounded-3xl border bg-white p-6">
+          <h2 className="text-lg font-semibold">Tokenized access to African real estate.</h2>
+          <p className="text-neutral-600">Invest from $1 per token. Focus: Kinshasa &amp; Luanda.</p>
+          <div className="mt-4 flex gap-3">
+            <a href="#properties" className="rounded-xl bg-black text-white px-4 py-2 text-sm font-medium hover:bg-neutral-800">View properties</a>
+            <a href="/privacy" className="rounded-xl border px-4 py-2 text-sm font-medium hover:bg-neutral-100">Learn more</a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Properties */}
-      <section id="properties" className="pb-16">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex items-end justify-between mb-4">
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Properties</h2>
-            <p className="text-sm text-neutral-500">{props.length ? `${fmt(props.length)} listed` : "No properties available"}</p>
+        <section id="properties" className="space-y-4">
+          <div className="flex items-end justify-between">
+            <h3 className="text-base font-semibold">Properties</h3>
+            <p className="text-sm text-neutral-600">{list.length} listed</p>
           </div>
 
-          {props.length === 0 ? (
+          {list.length === 0 ? (
             <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">
-              Couldn’t load properties. Check <code className="bg-neutral-100 px-1 rounded">NEXT_PUBLIC_BACKEND_URL</code> and your backend.
+              Couldn’t load properties (showing zero). Check NEXT_PUBLIC_BACKEND_URL or backend availability.
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {props.map((p) => (
-                <PropertyCard key={p.id} p={p} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {list.map((p: any) => (
+                <a key={p.id} href={`/property/${p.id}`} className="rounded-2xl border bg-white p-5 hover:shadow-sm transition">
+                  <h4 className="font-semibold">{p.title}</h4>
+                  <p className="text-xs text-neutral-500">ID: {p.id}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-xl bg-neutral-50 border p-3">
+                      <p className="text-neutral-600 text-xs">Price</p>
+                      <p className="font-semibold">${fmt(p.price)}</p>
+                    </div>
+                    <div className="rounded-xl bg-neutral-50 border p-3">
+                      <p className="text-neutral-600 text-xs">Available</p>
+                      <p className="font-semibold">{fmt(p.available)} tokens</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <span className="inline-block rounded-lg bg-black text-white px-3 py-1 text-xs">View details</span>
+                  </div>
+                </a>
               ))}
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-white/70">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>© 2025 Optiloves Invest</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-black">EN</a>
-            <a href="#" className="hover:text-black">FR</a>
-            <a href="#" className="hover:text-black">LG</a>
-            <a href="#" className="hover:text-black">PT</a>
-          </div>
-        </div>
-      </footer>
+        <footer className="py-10 text-center text-xs text-neutral-500">
+          © 2025 Optiloves Invest
+        </footer>
+      </div>
     </main>
   );
 }
-

@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "kin-001": {
+      "id": "kin-001",
+      "title": "Kinshasa â€” Gombe Apartments",
+      "availableTokens": 4994
+    },
+    "lua-001": {
+      "id": "lua-001",
+      "title": "Luanda â€” Ilha Offices",
+      "availableTokens": 2999
+    }
+  },
+  "reservations": [
+    {
+      "ref": "demo-kin-001-1-1755561444",
+      "property_id": "kin-001",
+      "quantity": 1,
+      "ts": 1755561444
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# app.py
+﻿# app.py
 import os
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
@@ -101,7 +101,7 @@ def stripe_webhook():
 
 # --- AUTO-INJECT: force $50 per token on /properties ---
 import json
-from flask import Flask, jsonify, request, abort
+from flask import request
 
 @app.after_request
 def _force_token_price_50(resp):
@@ -139,114 +139,7 @@ def _force_token_price_50(resp):
     return resp
 # --- END AUTO-INJECT ---
 
-# --- AUTO-INJECT: reservations persistence & overlay (idempotent) ---
-import os, json, threading, time
-from flask import request, jsonify
-
-_DB_PATH = os.path.join(os.path.dirname(__file__), "db.json")
-_DB_LOCK = threading.Lock()
-
-def _db_load(observed=None):
-    db = {"properties": {}, "reservations": []}
-    if os.path.exists(_DB_PATH):
-        try:
-            with open(_DB_PATH, "r", encoding="utf-8") as f:
-                db = json.load(f)
-                if "properties" not in db: db["properties"] = {}
-                if "reservations" not in db: db["reservations"] = []
-        except Exception:
-            pass
-    if observed:
-        props = db.get("properties", {})
-        for it in observed or []:
-            try:
-                pid = it.get("id")
-                if not pid:
-                    continue
-                rec = props.get(pid, {})
-                rec.setdefault("id", pid)
-                rec["title"] = it.get("title", rec.get("title", pid))
-                if "availableTokens" not in rec:
-                    rec["availableTokens"] = int(it.get("availableTokens") or it.get("available_tokens") or 0)
-                props[pid] = rec
-            except Exception:
-                pass
-        db["properties"] = props
-    return db
-
-def _db_save(db):
-    tmp = _DB_PATH + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(db, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, _DB_PATH)
-
-# overlay latest availability onto /properties output (without changing your existing handler)
-@app.after_request
-def _overlay_properties(resp):
-    try:
-        if request.path.rstrip("/") == "/properties" and resp.content_type and resp.content_type.startswith("application/json"):
-            raw = resp.get_data(as_text=True)
-            data = json.loads(raw)
-            lst = None
-            if isinstance(data, list):
-                lst = data
-            elif isinstance(data, dict) and isinstance(data.get("value"), list):
-                lst = data["value"]
-            with _DB_LOCK:
-                db = _db_load(observed=lst or [])
-                if lst is not None:
-                    for it in lst:
-                        pid = it.get("id")
-                        if pid and pid in db["properties"]:
-                            it["availableTokens"] = int(db["properties"][pid].get("availableTokens", it.get("availableTokens", 0)))
-                _db_save(db)  # persist the seed on first run
-            # optional encoding normalization if your previous hook defined it
-            try:
-                norm = globals().get("_normalize_any")
-                if norm:
-                    data = norm(data)
-            except Exception:
-                pass
-            resp.set_data(json.dumps(data, ensure_ascii=False))
-            resp.headers["Content-Type"] = "application/json; charset=utf-8"
-    except Exception:
-        pass
-    return resp
-
-# persistent /buy that decrements availability and records a reservation
-@app.route("/buy", methods=["POST", "OPTIONS"])
-def buy():
-    try:
-        if request.method == "OPTIONS":
-            return ("", 204)
-        data = request.get_json(silent=True) or {}
-        pid = str(data.get("property_id", "")).strip()
-        try:
-            qty = int(data.get("quantity", 0))
-        except Exception:
-            qty = 0
-        if not pid or qty <= 0:
-            return jsonify(ok=False, error="Invalid request"), 400
-        with _DB_LOCK:
-            db = _db_load()
-            props = db.get("properties", {})
-            if pid not in props:
-                return jsonify(ok=False, error="Property not found"), 404
-            avail = int(props[pid].get("availableTokens", 0))
-            if qty > avail:
-                return jsonify(ok=False, error="Insufficient availability"), 400
-            props[pid]["availableTokens"] = avail - qty
-            db.setdefault("reservations", [])
-            ref = f"demo-{pid}-{qty}-{int(time.time())}"
-            db["reservations"].append({"ref": ref, "property_id": pid, "quantity": qty, "ts": int(time.time())})
-            _db_save(db)
-        return jsonify(ok=True, tx_signature=ref, property=props[pid])
-    except Exception as e:
-        return jsonify(ok=False, error=str(e)), 500
-# --- END AUTO-INJECT ---
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
     app.run(host="0.0.0.0", port=port)
-
 
