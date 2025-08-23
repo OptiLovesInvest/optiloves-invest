@@ -1,61 +1,44 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
+import LanguageToggle from "../../components/LanguageToggle";
+import { PROPERTIES } from "../../lib/properties";
+import { getLang } from "../../../lib/locale";
+import { t } from "../../../lib/i18n";
 
-type Detail = {
-  id: string; title: string; city: string; country: string;
-  price_usd: number; token_price_usd: number; available_tokens: number;
-  description: string; images?: string[];
-};
+export const metadata = { title: "Properties â€” OptiLoves Invest" };
 
-export default function PropertyDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<Detail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/properties/${id}`, { cache: "no-store" })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(setData)
-      .catch(e => setError(e?.message || "Failed to load"));
-  }, [id]);
-
-  if (error) return (
-    <main className="p-6 max-w-3xl mx-auto">
-      <Link href="/" className="text-sm hover:underline">← Back</Link>
-      <div className="text-red-600 mt-3">Error: {error}</div>
-    </main>
-  );
-
-  if (!data) return (
-    <main className="p-6 max-w-3xl mx-auto">
-      <Link href="/" className="text-sm hover:underline">← Back</Link>
-      <div className="mt-3">Loading…</div>
-    </main>
-  );
-
+export default function Properties() {
+  const lang = getLang();
+  const list = Object.values(PROPERTIES);
   return (
-    <main className="p-6 max-w-3xl mx-auto space-y-6">
-      <Link href="/" className="text-sm hover:underline">← Back</Link>
-      <h1 className="text-2xl font-semibold">{data.title}</h1>
-
-      {data.images?.[0] && (
-        <img src={data.images[0]} alt={data.title} className="w-full rounded-2xl border" />
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="p-4 rounded-2xl border">
-          <div className="text-sm opacity-70">{data.city}, {data.country}</div>
-          <div className="mt-2">Project size: <b>${data.price_usd.toLocaleString()}</b></div>
-          <div>Token price: <b>${data.token_price_usd}</b></div>
-          <div>Available tokens: <b>{data.available_tokens.toLocaleString()}</b></div>
+    <main className="mx-auto max-w-5xl p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">{t(lang, "properties.title")}</h1>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-neutral-600">{t(lang, "properties.listed", { count: list.length })}</p>
+          <LanguageToggle />
         </div>
-        <div className="p-4 rounded-2xl border">
-          <div className="font-medium mb-2">About</div>
-          <p className="opacity-80">{data.description}</p>
-        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {list.map(p => (
+          <div key={p.id} className="rounded-2xl border bg-white p-5 hover:shadow-sm transition">
+            <h2 className="font-semibold">{p.title}</h2>
+            <p className="text-xs text-neutral-500">ID: {p.id}</p>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-neutral-50 border p-3">
+                <p className="text-neutral-600 text-xs">{t(lang, "label.token_price")}</p>
+                <p className="font-semibold">${p.price}</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border p-3">
+                <p className="text-neutral-600 text-xs">{t(lang, "label.available")}</p>
+                <p className="font-semibold">{p.available.toLocaleString()} tokens</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Link href={`/property/${p.id}`} className="rounded-lg border px-3 py-1 text-xs hover:bg-neutral-100">{t(lang, "label.view")}</Link>
+              <Link href={`/checkout?property=${p.id}&qty=1`} className="rounded-lg bg-black text-white px-3 py-1 text-xs">{t(lang, "label.buy")}</Link>
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   );

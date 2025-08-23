@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 
 export default function ClientBuy({
@@ -15,20 +15,34 @@ export default function ClientBuy({
   async function doBuy() {
     try {
       setStep("processing");
-      const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
-      const res = await fetch(`${base.replace(/\/$/, "")}/buy`, {
+      // Use same-origin proxy to avoid CORS and support both local + Render backends
+      const res = await fetch("/api/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
         body: JSON.stringify({ property_id: id, quantity: qty }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const j = await res.json();
-      if (j.ok === false) throw new Error(j.error || "Purchase failed");
-      const sig = j.tx_signature || "demo";
-      window.location.href = `/checkout/success?pid=${encodeURIComponent(id)}&qty=${qty}&price=${price}&total=${total}&tx=${encodeURIComponent(sig)}`;
+
+      // If backend (Render) returns a Stripe Checkout URL, redirect to it
+      const url = j.url || j.checkout_url;
+      if (url) {
+        window.location.href = String(url);
+        return;
+      }
+
+      // Fallback to demo/success flow (local dev)
+      if (j.ok && j.tx_signature) {
+        const sig = j.tx_signature || "demo";
+        window.location.href =
+          `/checkout/success?pid=${encodeURIComponent(id)}&qty=${qty}&price=${price}&total=${total}&tx=${encodeURIComponent(sig)}`;
+        return;
+      }
+
+      throw new Error(j.error || `HTTP ${res.status}`);
     } catch (e: any) {
-      window.location.href = `/checkout/cancel?pid=${encodeURIComponent(id)}&qty=${qty}&price=${price}&msg=${encodeURIComponent(e?.message || "failed")}`;
+      window.location.href =
+        `/checkout/cancel?pid=${encodeURIComponent(id)}&qty=${qty}&price=${price}&msg=${encodeURIComponent(e?.message || "failed")}`;
     }
   }
 

@@ -1,111 +1,55 @@
-"use client";
-import { useEffect, useState } from "react";
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { connection } from "../../lib/solana";
+﻿"use client";
+import * as React from "react";
+import { getPortfolio, getOrders } from "../../lib/api";
+import { InvestmentsTable } from "../../components/InvestmentsTable";
+import { OrdersList } from "../../components/OrdersList";
 
 export default function AccountPage() {
-  const [pubkey, setPubkey] = useState<PublicKey | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
-  const [txs, setTxs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const connect = async () => {
-    // @ts-ignore
-    const provider = window?.solana;
-    if (!provider) return;
-    const res = await provider.connect();
-    setPubkey(new PublicKey(res.publicKey.toString()));
-  };
-
-  const disconnect = async () => {
-    // @ts-ignore
-    const provider = window?.solana;
-    if (provider?.disconnect) await provider.disconnect();
-    setPubkey(null); setBalance(null); setTxs([]);
-  };
-
-  const refresh = async () => {
-    if (!pubkey) return;
-    setLoading(true);
-    const lamports = await connection.getBalance(pubkey, "confirmed");
-    setBalance(lamports / LAMPORTS_PER_SOL);
-    const sigs = await connection.getSignaturesForAddress(pubkey, { limit: 10 });
-    const parsed = await connection.getParsedTransactions(
-      sigs.map(s => s.signature),
-      { maxSupportedTransactionVersion: 0 }
-    );
-    const items = parsed.map((p, i) => ({
-      sig: sigs[i]?.signature,
-      slot: p?.slot,
-      time: p?.blockTime ? new Date(p.blockTime * 1000).toISOString() : "",
-      err: sigs[i]?.err || null,
-      amountSOL: extractSolTransfer(p)
-    }));
-    setTxs(items);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    // @ts-ignore
-    const provider = window?.solana;
-    if (provider?.isPhantom) {
-      provider.on?.("connect", () => {});
-      provider.on?.("disconnect", () => {});
-    }
-    return () => { if (provider?.removeAllListeners) provider.removeAllListeners(); };
+  const [wallet, setWallet] = React.useState<string>("");
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [holdings, setHoldings] = React.useState<any[]>([]);
+  const [totals, setTotals] = React.useState<{ total_tokens:number; total_invested_usd:number; total_est_value_usd:number } | null>(null);
+  const [orders, setOrders] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    const saved = (typeof window !== "undefined" && localStorage.getItem("walletAddress")) || "";
+    const qp = new URLSearchParams(window.location.search).get("wallet") || "";
+    const w = saved || qp || "test1";
+    setWallet(w);
+    (async () => {
+      try {
+        const [p, o] = await Promise.all([getPortfolio(w), getOrders(w)]);
+        setHoldings(p.holdings || []);
+        setTotals(p.totals || null);
+        setOrders(o || []);
+      } catch (e:any) {
+        setError(e?.message || "Failed to load portfolio");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
-
-  useEffect(() => { if (pubkey) refresh(); }, [pubkey]);
-
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">My Account</h1>
-      <div className="flex gap-2">
-        {!pubkey ? (
-          <button onClick={connect} className="px-4 py-2 rounded-xl shadow">Connect Phantom</button>
-        ) : (
-          <>
-            <button onClick={refresh} className="px-4 py-2 rounded-xl shadow" disabled={loading}>
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-            <button onClick={disconnect} className="px-4 py-2 rounded-xl shadow">Disconnect</button>
-          </>
-        )}
+    <main className="mx-auto max-w-3xl p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">My Investments</h1>
+        <div className="text-sm text-gray-600">Wallet: <span className="font-mono">{wallet}</span></div>
       </div>
-      <div className="rounded-xl shadow p-4">
-        <p><strong>Wallet:</strong> {pubkey ? pubkey.toBase58() : "Not connected"}</p>
-        <p><strong>Balance:</strong> {balance !== null ? `${balance.toFixed(4)} SOL` : "-"}</p>
-      </div>
-      <div className="rounded-xl shadow p-4">
-        <h2 className="font-semibold mb-2">Recent Transactions</h2>
-        {txs.length === 0 ? <p>No data</p> : (
-          <ul className="space-y-2">
-            {txs.map((t, idx) => (
-              <li key={idx} className="border rounded-lg p-2">
-                <div><strong>Signature:</strong> <a className="underline" target="_blank" href={`https://explorer.solana.com/tx/${t.sig}?cluster=devnet`}>{t.sig}</a></div>
-                <div><strong>Time:</strong> {t.time || "-"}</div>
-                <div><strong>Slot:</strong> {t.slot ?? "-"}</div>
-                <div><strong>Error:</strong> {t.err ? JSON.stringify(t.err) : "None"}</div>
-                <div><strong>Amount (approx):</strong> {t.amountSOL ?? "-"} SOL</div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {loading && <div>Loading…</div>}
+      {error && <div className="text-red-600">{error}</div>}
+      {!loading && !error && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="border rounded-xl p-4"><div className="text-xs text-gray-600">Total Tokens</div><div className="text-2xl font-semibold">{totals?.total_tokens ?? 0}</div></div>
+            <div className="border rounded-xl p-4"><div className="text-xs text-gray-600">Invested (USD)</div><div className="text-2xl font-semibold"></div></div>
+            <div className="border rounded-xl p-4"><div className="text-xs text-gray-600">Est. Value (USD)</div><div className="text-2xl font-semibold"></div></div>
+          </div>
+          <section className="space-y-3"><h2 className="text-lg font-semibold">Holdings</h2><InvestmentsTable holdings={holdings} /></section>
+          <section className="space-y-3"><h2 className="text-lg font-semibold">Recent Transactions</h2><OrdersList orders={orders} /></section>
+        </>
+      )}
     </main>
   );
 }
-function extractSolTransfer(p: any): number | null {
-  if (!p?.meta || !p?.transaction) return null;
-  const pre = p.meta.preBalances || [];
-  const post = p.meta.postBalances || [];
-  if (pre.length && post.length && pre.length === post.length) {
-    let max = 0;
-    for (let i = 0; i < pre.length; i++) {
-      const diff = Math.abs((post[i] - pre[i]) / 1_000_000_000);
-      if (diff > max) max = diff;
-    }
-    return Number(max.toFixed(6));
-  }
-  return null;
-}
+
+

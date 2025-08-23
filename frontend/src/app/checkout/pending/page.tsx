@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 
 export default function Pending() {
@@ -14,7 +14,7 @@ export default function Pending() {
     <main className="mx-auto max-w-xl p-6 space-y-4">
       <h1 className="text-2xl font-bold">Complete your payment</h1>
       <p className="opacity-80">
-        We opened Stripe Checkout in a new tab. If it didn’t open, use the button below.
+        We opened Stripe Checkout in a new tab. If it didnÃ¢â‚¬â„¢t open, use the button below.
       </p>
 
       <div className="flex gap-3">
@@ -32,8 +32,9 @@ export default function Pending() {
       </div>
 
       <p className="text-sm opacity-70">
-        After you pay on Stripe, you’ll be redirected back here automatically.
+        After you pay on Stripe, youÃ¢â‚¬â„¢ll be redirected back here automatically.
       </p>
     </main>
   );
 }
+

@@ -1,16 +1,12 @@
 ﻿import "./globals.css";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Optiloves Invest",
-  description: "Tokenized access to African real estate.",
-};
 
+export const dynamic = "force-dynamic";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-neutral-50 text-neutral-900 antialiased">
-        {children}
-      </body>
+      <body className="theme-pan">{children}</body>
     </html>
   );
 }

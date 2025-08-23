@@ -1,56 +1,57 @@
-// frontend/src/lib/api.ts
-export type Property = {
-  id: string;
-  title: string;
-  price: number;           // USD per token
-  availableTokens: number; // remaining supply
-};
-
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
-if (!BASE) {
-  console.warn("NEXT_PUBLIC_BACKEND_URL is not set. Add it to frontend/.env.local");
-}
-
-/** Build URLs safely (no double slashes) */
-function url(path: string) {
-  const base = (BASE ?? "").replace(/\/+$/, "");
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
-}
-
-export async function fetchProperties(): Promise<Property[]> {
-  const res = await fetch(url("/properties"), {
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch properties: ${res.status} ${text}`);
-  }
+﻿export async function getPortfolio(wallet: string) {
+  const base = process.env.NEXT_PUBLIC_BACKEND!;
+  const url = `${base}/portfolio?wallet=${encodeURIComponent(wallet)}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Portfolio fetch failed: ${res.status}`);
   return res.json();
-} // 👈 important closing brace
-
-export async function fetchPropertyById(id: string): Promise<Property | null> {
-  // If there is no /property/<id> endpoint, fetch all and find one.
-  const list = await fetchProperties();
-  return list.find((p) => p.id === id) ?? null;
 }
-export async function apiAirdrop(pubkey: string): Promise<{ ok: boolean; signature?: string; error?: string }> {
-  try {
-    const res = await fetch(url("/airdrop"), {
+
+export async function getOrders(wallet: string) {
+  const base = process.env.NEXT_PUBLIC_BACKEND!;
+  const url = `${base}/orders?wallet=${encodeURIComponent(wallet)}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Orders fetch failed: ${res.status}`);
+  return res.json();
+}
+/**
+ * Request a SOL airdrop for a given address.
+ * Tries backend POST /airdrop first (if you have it),
+ * then falls back to Solana devnet JSON-RPC (client-side).
+ */
+export async function apiAirdrop(address: string, amountLamports: number = 1_000_000_000) {
+  const base = process.env.NEXT_PUBLIC_BACKEND;
+
+  // 1) Try your backend proxy (if implemented)
+  if (base) {
+    try {
+      const res = await fetch(`${base}/airdrop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, amountLamports }),
+      });
+      if (res.ok) return res.json();
+    } catch {
+      // fall through to client RPC
+    }
+  }
+
+  // 2) Fallback: direct devnet JSON-RPC (will NOT work on mainnet)
+  const cluster = (process.env.NEXT_PUBLIC_SOL_CLUSTER || "devnet").toLowerCase();
+  if (cluster === "devnet") {
+    const rpc = "https://api.devnet.solana.com";
+    const res = await fetch(rpc, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wallet: pubkey }),
-      cache: "no-store",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "requestAirdrop",
+        params: [address, amountLamports],
+      }),
     });
-    // If your backend doesn't have /airdrop yet, this may 404 at runtime—but build will succeed.
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      return { ok: false, error: `HTTP ${res.status} ${text}` };
-    }
-    const json = await res.json().catch(() => ({}));
-    return { ok: json?.ok ?? true, signature: json?.signature, error: json?.error };
-  } catch (e: any) {
-    return { ok: false, error: e?.message ?? "airdrop failed" };
+    if (!res.ok) throw new Error(`Airdrop RPC failed: ${res.status}`);
+    return res.json(); // { result: <signature> } shape
   }
-}
 
+  throw new Error("Airdrop is disabled on this cluster.");
+}

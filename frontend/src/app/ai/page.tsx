@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -27,7 +27,7 @@ export default function AI() {
   }, []);
 
   const ask = async () => {
-    setStatus('thinking…');
+    setStatus('thinkingÃ¢â‚¬Â¦');
     setReply(null);
     try {
       const r = await fetch(`${BACKEND}/ai/chat`, {
@@ -44,7 +44,7 @@ export default function AI() {
   };
 
   const confirm = async (p: Proposal) => {
-    setStatus('confirming…');
+    setStatus('confirmingÃ¢â‚¬Â¦');
     try {
       const r = await fetch(`${BACKEND}/orders`, {
         method: 'POST',
@@ -55,7 +55,7 @@ export default function AI() {
       if (!r.ok || j.error) {
         setStatus(j.error || `Purchase failed (HTTP ${r.status})`);
       } else {
-        setStatus(`✅ Bought ${j.quantity} token(s) for ${p.title || p.property_id}. Total $${j.total}.`);
+        setStatus(`Ã¢Å“â€¦ Bought ${j.quantity} token(s) for ${p.title || p.property_id}. Total $${j.total}.`);
       }
     } catch (e: any) {
       setStatus(e?.message || 'Purchase failed');
@@ -69,7 +69,7 @@ export default function AI() {
     <main style={{ padding: 24, maxWidth: 800 }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>OptiLoves AI</h1>
-        <Link href="/" style={{ textDecoration: 'underline' }}>← Back</Link>
+        <Link href="/" style={{ textDecoration: 'underline' }}>Ã¢â€ Â Back</Link>
       </header>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -109,3 +109,4 @@ export default function AI() {
     </main>
   );
 }
+

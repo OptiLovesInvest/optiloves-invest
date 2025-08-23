@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -28,7 +28,7 @@ export default function BackendStatus({ className }: Props) {
   }, [BASE_URL]);
 
   const color = status === "ok" ? "bg-green-500" : status === "fail" ? "bg-red-500" : "bg-gray-400";
-  const label = status === "ok" ? "Connected" : status === "fail" ? "Offline" : "Checking…";
+  const label = status === "ok" ? "Connected" : status === "fail" ? "Offline" : "Checkingâ€¦";
 
   return (
     <span
@@ -41,3 +41,4 @@ export default function BackendStatus({ className }: Props) {
     </span>
   );
 }
+

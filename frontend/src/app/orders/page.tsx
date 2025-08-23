@@ -64,7 +64,8 @@ export default async function OrdersPage() {
           </table>
         </div>
       )}
-      <a className="underline text-sm" href="/">← Back to properties</a>
+      <a className="underline text-sm" href="/">â† Back to properties</a>
     </main>
   );
 }
+

@@ -8,12 +8,12 @@ export default function Page({ searchParams }: { searchParams: Record<string, st
   return (
     <main className="min-h-screen bg-neutral-50">
       <div className="mx-auto max-w-xl p-6 space-y-6">
-        <a href="/" className="text-sm text-neutral-600 hover:text-black">← Back</a>
+        <a href="/" className="text-sm text-neutral-600 hover:text-black">â† Back</a>
         <div className="rounded-3xl border bg-white p-6 space-y-4">
           <h1 className="text-2xl font-bold tracking-tight">Checkout cancelled</h1>
           <p className="text-neutral-600">{msg}</p>
           <div className="rounded-xl bg-neutral-50 border p-4 text-sm">
-            <p><strong>Property:</strong> {pid || "—"}</p>
+            <p><strong>Property:</strong> {pid || "â€”"}</p>
             <p><strong>Quantity:</strong> {fmt(qty)}</p>
             <p><strong>Price:</strong> ${fmt(price)} / token</p>
           </div>
@@ -26,3 +26,4 @@ export default function Page({ searchParams }: { searchParams: Record<string, st
     </main>
   );
 }
+

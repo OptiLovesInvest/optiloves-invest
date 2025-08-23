@@ -41,7 +41,8 @@ export default async function StatusPage() {
           {"cors_dev_enabled" in s ? <div><span className="opacity-70">Dev CORS:</span> {s.cors_dev_enabled ? "enabled" : "disabled"}</div> : null}
         </div>
       ) : null}
-      <a className="underline text-sm" href="/">← Back to properties</a>
+      <a className="underline text-sm" href="/">â† Back to properties</a>
     </main>
   );
 }
+

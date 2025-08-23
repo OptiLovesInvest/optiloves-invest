@@ -1,79 +1,79 @@
-// src/lib/i18n.ts
-export type L = 'en' | 'fr' | 'lg' | 'pt';
+﻿export type Lang = "en" | "fr";
 
-const FALLBACK: L = 'en';
-const STORAGE_KEY = 'optiloves_lng';
-const ALL: L[] = ['en', 'fr', 'lg', 'pt'];
-export const LANGS = ALL;
-
-export function getLng(): L {
-  if (typeof window === 'undefined') return FALLBACK; // SSR
-  const raw = localStorage.getItem(STORAGE_KEY);
-  return (ALL as string[]).includes(raw || '') ? (raw as L) : FALLBACK;
-}
-
-export function setLng(lng: L) {
-  if (typeof window !== 'undefined') localStorage.setItem(STORAGE_KEY, lng);
-}
-
-const dict: Record<L, Record<string, string>> = {
+const dict = {
   en: {
-    'app.name': 'Optiloves Invest',
-    'nav.properties': 'Properties',
-    'nav.account': 'Account',
-    'hero.title': 'Tokenized access to African real estate. $1 per token.',
-    'footer.rights': '© 2025 Optiloves Invest',
-    'props': 'Properties',
+    hero: {
+      title: "Tokenized access to African real estate",
+      cta: "View properties",
+    },
+    nav: {
+      terms: "Terms",
+      privacy: "Privacy",
+    },
+    confirm: {
+      title: "Order confirmation",
+    },
+    checkout: {
+      title: "Checkout",
+      buy: "Buy",
+    },
+    common: {
+      back: "Back",
+    },
   },
   fr: {
-    'app.name': 'Optiloves Invest',
-    'nav.properties': 'Biens',
-    'nav.account': 'Compte',
-    'hero.title': 'Accès tokenisé à l’immobilier africain. 1 $ par jeton.',
-    'footer.rights': '© 2025 Optiloves Invest',
-    'props': 'Biens',
+    hero: {
+      title: "AccÃ¨s tokenisÃ© Ã  l'immobilier africain",
+      cta: "Voir les biens",
+    },
+    nav: {
+      terms: "Conditions",
+      privacy: "ConfidentialitÃ©",
+    },
+    confirm: {
+      title: "Confirmation de la commande",
+    },
+    checkout: {
+      title: "Paiement",
+      buy: "Acheter",
+    },
+    common: {
+      back: "Retour",
+    },
   },
-  lg: {
-    'app.name': 'Optiloves Invest',
-    'nav.properties': 'Ebintu by’ettaka',
-    'nav.account': 'Akaawunta',
-    'hero.title': 'Okugula mu by’ettaka bya Afrika mu butono. $1 buli token.',
-    'footer.rights': '© 2025 Optiloves Invest',
-    'props': 'Ebintu',
-  },
-  pt: {
-    'app.name': 'Optiloves Invest',
-    'nav.properties': 'Propriedades',
-    'nav.account': 'Conta',
-    'hero.title': 'Acesso tokenizado ao imobiliário africano. $1 por token.',
-    'footer.rights': '© 2025 Optiloves Invest',
-    'props': 'Propriedades',
-  },
-};
+} as const;
 
-// helper to detect if a string is a language code
-function isLng(s: string): s is L {
-  return (ALL as string[]).includes(s);
-}
-
-/**
- * Flexible translator:
- * - t('key', 'en')  OR
- * - t('en', 'key')
- * - t('key') uses current/fallback language
- */
-export function t(a: string, b?: string): string {
-  let key: string;
-  let lng: L | undefined;
-
-  if (isLng(a)) {
-    lng = a;
-    key = b ?? '';
-  } else {
-    key = a;
-    lng = (b as L | undefined);
+/** Client-side language guess from cookie or browser */
+export function getClientLang(): Lang {
+  if (typeof document !== "undefined") {
+    const m = document.cookie.match(/(?:^|;\\s*)lang=(en|fr)/i);
+    if (m) return (m[1].toLowerCase() as Lang);
+    return navigator.language?.toLowerCase().startsWith("fr") ? "fr" : "en";
   }
-
-  const lang = lng ?? (typeof window === 'undefined' ? FALLBACK : getLng());
-  return dict[lang]?.[key] ?? dict[FALLBACK]?.[key] ?? key;
+  return "en";
 }
+
+/** Dotted-key translation with safe fallback. Always returns a string. */
+export function t(lang: Lang, key: string, ..._rest: any[]): string {
+  const getPath = (obj: any, path: string) =>
+    path.split(".").reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj);
+  const val = getPath((dict as any)[lang], key) ?? getPath((dict as any).en, key);
+  return typeof val === "string" ? val : key;
+}
+
+export { dict };
+/**
+ * Compatibility shim:
+ * Some components do `import { L } from "../lib/i18n"` and use `L[lang]["some.key"]`.
+ * This proxy maps that to our `t(lang, key)` function.
+ */
+export const L: any = new Proxy({}, {
+  get(_target, langProp) {
+    const lang = String(langProp) as any;
+    return new Proxy({}, {
+      get(_t, keyProp) {
+        return t(lang, String(keyProp));
+      }
+    });
+  }
+});

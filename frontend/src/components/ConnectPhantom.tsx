@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useState } from 'react';
 declare global { interface Window { solana?: any } }
 
@@ -33,7 +33,7 @@ export default function ConnectPhantom({ onConnected }: { onConnected: (pubkey: 
     <div className="flex gap-2 items-center">
       {pubkey ? (
         <>
-          <span className="text-sm">Wallet: {pubkey.slice(0,4)}…{pubkey.slice(-4)}</span>
+          <span className="text-sm">Wallet: {pubkey.slice(0,4)}â€¦{pubkey.slice(-4)}</span>
           <button onClick={disconnect} className="px-3 py-1 rounded bg-gray-200">Disconnect</button>
         </>
       ) : (
@@ -42,3 +42,4 @@ export default function ConnectPhantom({ onConnected }: { onConnected: (pubkey: 
     </div>
   );
 }
+

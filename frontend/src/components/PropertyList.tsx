@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import PropertyCard from "./PropertyCard";
-import { L } from "../lib/i18n";
+import { t, Lang } from "../lib/i18n";
 
 type Property = { id: string; title: string; price: number; availableTokens: number };
-const API = process.env.NEXT_PUBLIC_BACKEND_URL || "https://optiloves-backend.onrender.com";
+const API = process.env.NEXT_PUBLIC_BACKEND || "https://optiloves-backend.onrender.com";
 
-export default function PropertyList({ lng }: { lng: L }) {
+export default function PropertyList({ lng }: { lng: Lang }) {
   const [items, setItems] = useState<Property[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -24,13 +24,15 @@ export default function PropertyList({ lng }: { lng: L }) {
     })();
   }, []);
 
-  if (items === null) return <div className="text-sm text-gray-500">Loading properties…</div>;
+  if (items === null) return <div className="text-sm text-gray-500">Loading propertiesâ€¦</div>;
   if (err) return <div className="text-sm text-red-600">Error: {err}</div>;
   if (!items.length) return <div className="text-sm text-gray-500">No properties to show right now.</div>;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((p) => <PropertyCard key={p.id} p={p} lng={lng} />)}
+      {items.map((p) => <PropertyCard key={p.id} p={p} />)}
     </div>
   );
 }
+
+
