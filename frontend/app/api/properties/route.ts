@@ -1,6 +1,6 @@
 ﻿export async function GET() {
-  const backend = (process.env.NEXT_PUBLIC_BACKEND ?? "").replace(/\/$/, "");
-  const url = ${backend}/properties;
+  const backend = (process.env.NEXT_PUBLIC_BACKEND || "https://optiloves-backend.onrender.com").replace(/\/$/, "");
+  const url = `${backend}/properties`;
   try {
     const r = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
     if (!r.ok) return new Response(await r.text(), { status: r.status });
