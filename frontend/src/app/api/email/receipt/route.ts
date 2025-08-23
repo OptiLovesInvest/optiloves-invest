@@ -2,7 +2,7 @@
 export async function POST(req: Request) {
   try {
     const payload = await req.json();
-    const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL) || "http://127.0.0.1:5000";
+    const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL) || "${process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)}";
     const res = await fetch(`${base.replace(/\/$/, "")}/email/receipt`, {
       method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store",
       body: JSON.stringify(payload),
@@ -13,3 +13,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok:false, error: e?.message || "Proxy error" }, { status: 500 });
   }
 }
+
+

@@ -3,7 +3,7 @@
 const fmtDT = (ts: number) => new Date(ts * 1000).toLocaleString();
 
 async function getKYC() {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL) || "http://127.0.0.1:5000";
+  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL) || "${process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)}";
   const token = process.env.ADMIN_TOKEN || "devadmin";
   try {
     const res = await fetch(`${base.replace(/\/$/, "")}/admin/kyc.json`, {
@@ -67,5 +67,7 @@ export default async function Page() {
     </main>
   );
 }
+
+
 
 

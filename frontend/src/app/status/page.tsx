@@ -11,7 +11,7 @@ type Status = {
 };
 
 async function loadStatus(): Promise<Status> {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)?.replace(/\/+$/, "") ?? "";
+  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL)?.replace(/\/+$/, "") ?? "";
   const res = await fetch(`${base}/status`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load status");
   return res.json();
@@ -45,5 +45,6 @@ export default async function StatusPage() {
     </main>
   );
 }
+
 
 

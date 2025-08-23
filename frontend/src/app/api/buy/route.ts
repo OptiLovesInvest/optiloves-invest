@@ -3,7 +3,7 @@
 export async function POST(req: Request) {
   try {
     const { property_id, quantity } = await req.json();
-    const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL) || "http://127.0.0.1:5000";
+    const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL) || "${process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)}";
     const url = `${base.replace(/\/$/, "")}/buy`;
     const res = await fetch(url, {
       method: "POST",
@@ -17,3 +17,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: e?.message || "Proxy error" }, { status: 500 });
   }
 }
+
+
