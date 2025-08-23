@@ -12,7 +12,7 @@ type Order = {
 };
 
 async function fetchOrders(): Promise<Order[]> {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "") ?? "";
+  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)?.replace(/\/+$/, "") ?? "";
   const res = await fetch(`${base}/orders`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load orders");
   return res.json();
@@ -68,4 +68,5 @@ export default async function OrdersPage() {
     </main>
   );
 }
+
 

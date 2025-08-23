@@ -4,7 +4,7 @@ import PropertyCard from "./PropertyCard";
 import { t, Lang } from "../lib/i18n";
 
 type Property = { id: string; title: string; price: number; availableTokens: number };
-const API = process.env.NEXT_PUBLIC_BACKEND || "https://optiloves-backend.onrender.com";
+const API = (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL) || "https://optiloves-backend.onrender.com";
 
 export default function PropertyList({ lng }: { lng: Lang }) {
   const [items, setItems] = useState<Property[] | null>(null);
@@ -34,5 +34,6 @@ export default function PropertyList({ lng }: { lng: Lang }) {
     </div>
   );
 }
+
 
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 export const dynamic = "force-static";
 export const runtime = "nodejs";
 
@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 type Property = { id:string; title:string; price:number; availableTokens:number };
 
 export default function Home() {
-  const backend = process.env.NEXT_PUBLIC_BACKEND || "";
+  const backend = (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL) || "";
   const [items, setItems] = useState<Property[]>([]);
   const [err, setErr] = useState("");
 
@@ -20,7 +20,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold">Optiloves Invest</h1>
       <div className="rounded-xl border p-3 text-xs mb-3">BACKEND: {backend || "(unset)"}</div>
       {err && <div className="rounded-xl border p-3 text-red-600">{err}</div>}
-      {!err && items.length === 0 && <div className="rounded-xl border p-3">Loading… or no properties.</div>}
+      {!err && items.length === 0 && <div className="rounded-xl border p-3">Loadingâ€¦ or no properties.</div>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map(p => (
           <div key={p.id} className="rounded-2xl border bg-white p-5 hover:shadow-sm transition">

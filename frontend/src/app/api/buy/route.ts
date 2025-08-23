@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const { property_id, quantity } = await req.json();
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
+    const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL) || "http://127.0.0.1:5000";
     const url = `${base.replace(/\/$/, "")}/buy`;
     const res = await fetch(url, {
       method: "POST",
