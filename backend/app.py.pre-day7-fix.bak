@@ -1,0 +1,623 @@
+
+
+import io
+#
+
+import os
+from flask import Flask, jsonify, request, abort
+from flask_cors import CORS
+import stripe
+
+
+# --- AUTO-INJECT: orders + email receipts ---
+import os, io, csv, json, time, smtplib, uuid
+from email.message import EmailMessage
+from flask import request, jsonify, make_response
+
+ORDERS_FILE = os.path.join(os.path.dirname(__file__), "orders.json")
+OUTBOX_DIR  = os.path.join(os.path.dirname(__file__), "outbox")
+
+def _orders_load():
+    try:
+        with open(ORDERS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _orders_save(items):
+    try:
+        with open(ORDERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def _ensure_outbox():
+    try:
+        os.makedirs(OUTBOX_DIR, exist_ok=True)
+    except Exception:
+        pass
+
+def _send_receipt(to_email, order):
+    if not to_email:
+        return False, "no email"
+    host = os.environ.get("SMTP_HOST")
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    user = os.environ.get("SMTP_USER")
+    pwd  = os.environ.get("SMTP_PASS")
+    sender = os.environ.get("SMTP_FROM", "no-reply@optiloves.local")
+    subject = f"Receipt • Order {order.get('order_id','')}"
+    body = (
+        f"Thank you for your purchase!\n\n"
+        f"Order: {order.get('order_id','')}\n"
+        f"Property: {order.get('property_id','')}\n"
+        f"Quantity: {order.get('quantity',0)}\n"
+        f"Price per token: ${order.get('price_per_token',0)}\n"
+        f"Total: ${order.get('total',0)}\n"
+        f"Date: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(order.get('ts',time.time())))}\n"
+    )
+    try:
+        if host and user and pwd:
+            msg = EmailMessage()
+            msg["From"] = sender
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.set_content(body)
+            with smtplib.SMTP(host, port, timeout=15) as s:
+                s.starttls()
+                s.login(user, pwd)
+                s.send_message(msg)
+            return True, "sent smtp"
+        else:
+            _ensure_outbox()
+            fn = os.path.join(OUTBOX_DIR, f"receipt-{order.get('order_id','')}.txt")
+            with open(fn, "w", encoding="utf-8") as f:
+                f.write(f"To: {to_email}\nFrom: {sender}\nSubject: {subject}\n\n{body}")
+            return True, "saved to outbox"
+    except Exception as e:
+        _ensure_outbox()
+        fn = os.path.join(OUTBOX_DIR, f"receipt-{order.get('order_id','')}-error.txt")
+        try:
+            with open(fn, "w", encoding="utf-8") as f:
+                f.write(str(e))
+        except Exception:
+            pass
+        return False, str(e)
+
+def _db_path():
+    return os.path.join(os.path.dirname(__file__), "db.json")
+
+def _db_load():
+    try:
+        with open(_db_path(), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"properties": {}}
+
+def _db_save(obj):
+    try:
+        with open(_db_path(), "w", encoding="utf-8") as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+# Reuse admin guard if present; otherwise define a simple one
+try:
+    _is_admin
+except NameError:
+    ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "devadmin")
+    def _is_admin(req):
+        tok = req.headers.get("X-Admin-Token") or req.args.get("token") or ""
+        return tok == ADMIN_TOKEN
+
+@app.route("/orders/confirm", methods=["POST"])
+def orders_confirm():
+    data = request.get_json(silent=True) or {}
+    pid  = str(data.get("property_id","")).strip()
+    qty  = int(data.get("quantity", 0) or 0)
+    email = str(data.get("email","")).strip()
+    client_order_id = str(data.get("order_id","")).strip()  # e.g. Stripe session id
+    if not pid or qty <= 0:
+        return jsonify(ok=False, error="invalid request"), 400
+
+    price_per = 50  # MVP fixed price
+    total = price_per * qty
+    ts = int(time.time())
+    order_id = client_order_id or f"ord_{uuid.uuid4().hex[:10]}"
+
+    db = _db_load()
+    props = db.get("properties", {})
+    prop = props.get(pid) or {}
+    avail = int(prop.get("availableTokens", 0))
+    if avail < qty:
+        return jsonify(ok=False, error="insufficient availability"), 409
+    prop["availableTokens"] = avail - qty
+    props[pid] = prop
+    db["properties"] = props
+    _db_save(db)
+
+    order = {
+        "order_id": order_id,
+        "property_id": pid,
+        "quantity": qty,
+        "price_per_token": price_per,
+        "total": total,
+        "email": email,
+        "status": "paid",
+        "ts": ts,
+        "source": data.get("source","web"),
+    }
+    orders = _orders_load()
+    orders.append(order)
+    _orders_save(orders)
+
+    sent, how = _send_receipt(email, order)
+    return jsonify(ok=True, order=order, emailed=sent, via=how)
+
+@app.route("/admin/orders.json", methods=["GET"])
+def orders_admin_json():
+    if not _is_admin(request):
+        return jsonify(ok=False, error="unauthorized"), 401
+    return jsonify(_orders_load())
+
+@app.route("/admin/orders.csv", methods=["GET"])
+def orders_admin_csv():
+    if not _is_admin(request):
+        return ("unauthorized", 401)
+    items = _orders_load()
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["order_id","property_id","quantity","price_per_token","total","email","status","ts","source"])
+    writer.writeheader()
+    for it in items:
+        writer.writerow({
+            "order_id": it.get("order_id",""),
+            "property_id": it.get("property_id",""),
+            "quantity": it.get("quantity",""),
+            "price_per_token": it.get("price_per_token",""),
+            "total": it.get("total",""),
+            "email": it.get("email",""),
+            "status": it.get("status",""),
+            "ts": it.get("ts",""),
+            "source": it.get("source",""),
+        })
+    data = output.getvalue()
+    resp = make_response("\ufeff" + data)
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=orders.csv"
+    return resp
+# --- END AUTO-INJECT ---
+# --- AUTO-INJECT: simple KYC store ---
+from flask import request, jsonify, make_response
+import os, json, time
+from pathlib import Path
+
+KYC_FILE = Path(os.environ.get("KYC_FILE", "kyc.json"))
+
+def _kyc_load():
+    if KYC_FILE.exists():
+        try:
+            return json.loads(KYC_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+def _kyc_save(items):
+    try:
+        KYC_FILE.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+@app.route("/kyc", methods=["POST"])
+def kyc_post():
+    data = request.get_json(silent=True) or {}
+    rec = {
+        "ts": int(time.time()),
+        "full_name": str(data.get("full_name","")).strip(),
+        "email": str(data.get("email","")).strip(),
+        "country": str(data.get("country","")).strip(),
+        "id_number": str(data.get("id_number","")).strip(),
+    }
+    if not rec["full_name"] or not rec["email"]:
+        return jsonify(ok=False, error="name+email required"), 400
+    items = _kyc_load()
+    items.append(rec)
+    _kyc_save(items)
+    return jsonify(ok=True)
+
+@app.route("/kyc", methods=["GET"])
+def kyc_get():
+    items = _kyc_load()
+    red = [{k: v for k, v in it.items() if k != "id_number"} for it in items]
+    return jsonify(red)
+# --- END AUTO-INJECT ---
+
+
+
+# Allow only your frontend in production. For now, accept FRONTEND_ORIGIN or fallback "*".
+CORS(app, resources={r"/*": {"origins": os.environ.get("FRONTEND_ORIGIN", "*")}})
+
+# Stripe config (set STRIPE_SECRET_KEY & STRIPE_WEBHOOK_SECRET in Render)
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+
+# Demo in-memory store (replace with Postgres later)
+PROPERTIES = [
+    {"id": "kin-001", "title": "Kinshasa Ã¢â‚¬â€ Gombe Apartments", "price": 120_000, "availableTokens": 4995},
+    {"id": "lua-001", "title": "Luanda Ã¢â‚¬â€ Ilha Offices",       "price": 250_000, "availableTokens": 2999},
+]
+
+@app.get("/")
+def root():
+    return jsonify({"ok": True, "service": "optiloves-backend"})
+
+@app.get("/health")
+def health():
+    return jsonify({"ok": True})
+
+@app.get("/properties")
+def list_properties():
+    return jsonify(PROPERTIES)
+
+# Optional demo airdrop stub (safe to remove if unused)
+@app.post("/airdrop")
+def airdrop():
+    data = request.get_json(force=True) or {}
+    wallet = data.get("wallet")
+    sol = float(data.get("sol", 1))
+    return jsonify({"ok": True, "wallet": wallet, "sol": sol, "tx_signature": "demo-tx-123456"})
+
+# Create Stripe Checkout Session
+@app.post("/checkout")
+def checkout():
+    data = request.get_json(force=True) or {}
+    prop_id = data.get("property_id")
+    qty = int(data.get("quantity", 1))
+
+    prop = next((p for p in PROPERTIES if p["id"] == prop_id), None)
+    if not prop or qty < 1:
+        abort(400, "Invalid property or quantity")
+
+    if not stripe.api_key:
+        abort(400, "Stripe not configured (missing STRIPE_SECRET_KEY)")
+
+    # IMPORTANT: confirm 'price' is USD per token.
+    unit_amount_usd = prop["price"]             # e.g. 1 == $1  (yours is 120_000 == $120,000)
+    amount_cents = unit_amount_usd * 100
+
+    origin = os.environ.get("FRONTEND_ORIGIN", "https://example.com")
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": prop["title"], "metadata": {"property_id": prop_id}},
+                    "unit_amount": amount_cents,
+                },
+                "quantity": qty,
+            }],
+            success_url=f"{origin}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{origin}/checkout/cancel",
+            metadata={"property_id": prop_id, "quantity": str(qty)},
+        )
+        return jsonify({"ok": True, "checkout_url": session.url})
+    except Exception as e:
+        abort(400, f"Stripe error: {e}")
+
+# Stripe webhook to finalize orders and decrement tokens
+@app.post("/stripe/webhook")
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature", "")
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, secret)
+    except Exception as e:
+        return str(e), 400
+
+    if event["type"] == "checkout.session.completed":
+        sess = event["data"]["object"]
+        pid = (sess.get("metadata") or {}).get("property_id")
+        qty = int((sess.get("metadata") or {}).get("quantity", "1"))
+        for p in PROPERTIES:
+            if p["id"] == pid:
+                p["availableTokens"] = max(0, p["availableTokens"] - qty)
+                break
+        # TODO: persist order + token decrement to Postgres here
+
+    return "", 200
+
+# --- AUTO-INJECT: force $50 per token on /properties ---
+import json
+from flask import Flask, jsonify, request, abort
+
+@app.after_request
+def _force_token_price_50(resp):
+    try:
+        if request.path.rstrip('/') == "/properties":
+            data = None
+            try:
+                data = resp.get_json(silent=True)
+            except Exception:
+                pass
+            if data is None:
+                raw = resp.get_data(as_text=True)
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    return resp  # not JSON, leave untouched
+
+            def fix_item(it):
+                if isinstance(it, dict) and it.get("id") in ("kin-001", "lua-001"):
+                    it["price"] = 50
+                return it
+
+            if isinstance(data, list):
+                data = [fix_item(x) for x in data]
+            elif isinstance(data, dict):
+                if isinstance(data.get("value"), list):
+                    data["value"] = [fix_item(x) for x in data["value"]]
+                else:
+                    data = fix_item(data)
+
+            resp.set_data(json.dumps(data, ensure_ascii=False))
+            resp.headers["Content-Type"] = "application/json; charset=utf-8"
+    except Exception:
+        pass
+    return resp
+# --- END AUTO-INJECT ---
+
+# --- AUTO-INJECT: reservations persistence & overlay (idempotent) ---
+import os, json, threading, time
+from flask import request, jsonify, make_response
+
+_DB_PATH = os.path.join(os.path.dirname(__file__), "db.json")
+_DB_LOCK = threading.Lock()
+
+def _db_load(observed=None):
+    db = {"properties": {}, "reservations": []}
+    if os.path.exists(_DB_PATH):
+        try:
+            with open(_DB_PATH, "r", encoding="utf-8") as f:
+                db = json.load(f)
+                if "properties" not in db: db["properties"] = {}
+                if "reservations" not in db: db["reservations"] = []
+        except Exception:
+            pass
+    if observed:
+        props = db.get("properties", {})
+        for it in observed or []:
+            try:
+                pid = it.get("id")
+                if not pid:
+                    continue
+                rec = props.get(pid, {})
+                rec.setdefault("id", pid)
+                rec["title"] = it.get("title", rec.get("title", pid))
+                if "availableTokens" not in rec:
+                    rec["availableTokens"] = int(it.get("availableTokens") or it.get("available_tokens") or 0)
+                props[pid] = rec
+            except Exception:
+                pass
+        db["properties"] = props
+    return db
+
+def _db_save(db):
+    tmp = _DB_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, _DB_PATH)
+
+# overlay latest availability onto /properties output (without changing your existing handler)
+@app.after_request
+def _overlay_properties(resp):
+    try:
+        if request.path.rstrip("/") == "/properties" and resp.content_type and resp.content_type.startswith("application/json"):
+            raw = resp.get_data(as_text=True)
+            data = json.loads(raw)
+            lst = None
+            if isinstance(data, list):
+                lst = data
+            elif isinstance(data, dict) and isinstance(data.get("value"), list):
+                lst = data["value"]
+            with _DB_LOCK:
+                db = _db_load(observed=lst or [])
+                if lst is not None:
+                    for it in lst:
+                        pid = it.get("id")
+                        if pid and pid in db["properties"]:
+                            it["availableTokens"] = int(db["properties"][pid].get("availableTokens", it.get("availableTokens", 0)))
+                _db_save(db)  # persist the seed on first run
+            # optional encoding normalization if your previous hook defined it
+            try:
+                norm = globals().get("_normalize_any")
+                if norm:
+                    data = norm(data)
+            except Exception:
+                pass
+            resp.set_data(json.dumps(data, ensure_ascii=False))
+            resp.headers["Content-Type"] = "application/json; charset=utf-8"
+    except Exception:
+        pass
+    return resp
+
+# persistent /buy that decrements availability and records a reservation
+@app.route("/buy", methods=["POST", "OPTIONS"])
+def buy():
+    try:
+        if request.method == "OPTIONS":
+            return ("", 204)
+        data = request.get_json(silent=True) or {}
+        pid = str(data.get("property_id", "")).strip()
+        try:
+            qty = int(data.get("quantity", 0))
+        except Exception:
+            qty = 0
+        if not pid or qty <= 0:
+            return jsonify(ok=False, error="Invalid request"), 400
+        with _DB_LOCK:
+            db = _db_load()
+            props = db.get("properties", {})
+            if pid not in props:
+                return jsonify(ok=False, error="Property not found"), 404
+            avail = int(props[pid].get("availableTokens", 0))
+            if qty > avail:
+                return jsonify(ok=False, error="Insufficient availability"), 400
+            props[pid]["availableTokens"] = avail - qty
+            db.setdefault("reservations", [])
+            ref = f"demo-{pid}-{qty}-{int(time.time())}"
+            db["reservations"].append({"ref": ref, "property_id": pid, "quantity": qty, "ts": int(time.time())})
+            _db_save(db)
+        return jsonify(ok=True, tx_signature=ref, property=props[pid])
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 500
+# --- END AUTO-INJECT ---
+
+# --- AUTO-INJECT: Day5 KYC + Admin ---
+import os, json, time, hashlib, smtplib
+from email.message import EmailMessage
+from flask import request, jsonify, make_response
+
+
+app = Flask(__name__)
+
+
+
+
+DB_FILE = os.path.join(os.path.dirname(__file__), "db.json")
+
+def _db_load():
+    try:
+        with open(DB_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _db_save(d):
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(d, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def _db_get_section(name, default):
+    db = _db_load()
+    if name not in db or not isinstance(db[name], type(default)):
+        db[name] = default
+    return db
+
+
+@app.route("/reservations", methods=["GET"])
+def reservations_list():
+    try:
+        db = _db_load()
+        items = db.get("reservations") or db.get("orders") or []
+        out = []
+        for r in items:
+            out.append({
+                "id": r.get("id") or r.get("order_id") or f"r-{len(out)+1}",
+                "property_id": r.get("property_id") or r.get("pid") or "",
+                "quantity": int(r.get("quantity") or r.get("qty") or 0),
+                "total": float(r.get("total") or 0),
+                "email": r.get("email") or "",
+                "ts": int(r.get("ts") or time.time())
+            })
+        return jsonify(out)
+    except Exception:
+        return jsonify([]), 200
+
+@app.route("/email/receipt", methods=["POST"])
+def email_receipt():
+    try:
+        data = request.get_json(silent=True) or {}
+        to = str(data.get("to","")).strip().lower()
+        pid = str(data.get("property_id","")).strip()
+        qty = int(data.get("quantity") or 0)
+        price = float(data.get("price") or 0.0)
+        total = float(data.get("total") or price*qty)
+        tx = str(data.get("tx","")).strip()
+        if not to:
+            return jsonify(ok=False, error="recipient email required"), 400
+        host = os.getenv("SMTP_HOST","")
+        port = int(os.getenv("SMTP_PORT","587"))
+        user = os.getenv("SMTP_USER","")
+        pwd  = os.getenv("SMTP_PASS","")
+        from_addr = os.getenv("SMTP_FROM", user or "no-reply@optiloves.local")
+        subject = f"Your Optiloves receipt • {pid} • {qty} token(s)"
+        body = f"""Thanks for your purchase.
+
+Property: {pid}
+Quantity: {qty}
+Price: ${price:.0f} / token
+Total: ${total:.0f}
+Reference: {tx or 'pending'}
+
+If this wasn’t you, contact support."""
+        if host and user and pwd:
+            msg = EmailMessage()
+            msg["Subject"] = subject
+            msg["From"] = from_addr
+            msg["To"] = to
+            msg.set_content(body)
+            with smtplib.SMTP(host, port) as s:
+                s.starttls()
+                s.login(user, pwd)
+                s.send_message(msg)
+            return jsonify(ok=True, sent=True)
+        else:
+            print("EMAIL (simulated) ->", to, subject)
+            print(body)
+            return jsonify(ok=True, sent=False, simulated=True)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 500
+# --- END AUTO-INJECT: Day5 KYC + Admin ---
+
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port)
+
+# --- AUTO-INJECT: admin KYC export ---
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "devadmin")
+
+def _is_admin(req):
+    tok = req.headers.get("X-Admin-Token") or req.args.get("token") or ""
+    return tok == ADMIN_TOKEN
+
+@app.route("/admin/kyc.json", methods=["GET"])
+def kyc_admin_json():
+    if not _is_admin(request):
+        return jsonify(ok=False, error="unauthorized"), 401
+    items = _kyc_load()
+    return jsonify(items)
+
+@app.route("/admin/kyc.csv", methods=["GET"])
+def kyc_admin_csv():
+    if not _is_admin(request):
+        return ("unauthorized", 401)
+    items = _kyc_load()
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["full_name","email","country","id_number","ts"])
+    writer.writeheader()
+    for it in items:
+        writer.writerow({
+            "full_name": it.get("full_name",""),
+            "email": it.get("email",""),
+            "country": it.get("country",""),
+            "id_number": it.get("id_number",""),
+            "ts": it.get("ts",""),
+        })
+    data = output.getvalue()
+    bom = "\ufeff" + data  # Excel-friendly
+    resp = make_response(bom)
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=kyc.csv"
+    return resp
+# --- END AUTO-INJECT ---
+    # Dev server
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
+    import os
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+
+    import os
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+if __name__ == "__main__":
+    import os
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
