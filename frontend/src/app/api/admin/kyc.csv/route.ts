@@ -1,7 +1,7 @@
 ﻿export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL) || "${process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)}";
+  const base = (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://optiloves-backend.onrender.com");
   const token = process.env.ADMIN_TOKEN || "devadmin";
   const res = await fetch(`${base.replace(/\/$/, "")}/admin/kyc.csv`, {
     headers: { "X-Admin-Token": token },
@@ -16,5 +16,6 @@ export async function GET() {
     },
   });
 }
+
 
 

@@ -12,7 +12,7 @@ type Proposal = {
 };
 
 export default function AI() {
-  const BACKEND = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL)!;
+  const BACKEND = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND))))!;
   const [q, setQ] = useState('');
   const [reply, setReply] = useState<any>(null);
   const [status, setStatus] = useState<string>('');
@@ -109,6 +109,7 @@ export default function AI() {
     </main>
   );
 }
+
 
 
 

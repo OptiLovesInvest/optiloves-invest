@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 type Property = { id:string; title:string; price:number; availableTokens:number };
 
 export default function Home() {
-  const backend = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL)) || "";
+  const backend = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND))) || "";
   const [items, setItems] = useState<Property[]>([]);
   const [err, setErr] = useState("");
 
@@ -42,4 +42,5 @@ export default function Home() {
     </main>
   );
 }
+
 

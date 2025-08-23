@@ -2,7 +2,7 @@
 type Res = { id: string; property_id: string; quantity: number; total: number; email?: string; ts?: number; };
 async function getData(): Promise<Res[]> {
   try {
-    const res = await fetch(`${(process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL)?.replace(/\/$/, "")}/reservations`, { cache: "no-store" });
+    const res = await fetch(`${(process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND))))?.replace(/\/$/, "")}/reservations`, { cache: "no-store" });
     return await res.json();
   } catch { return []; }
 }
@@ -43,6 +43,7 @@ export default async function Page() {
     </main>
   );
 }
+
 
 
 

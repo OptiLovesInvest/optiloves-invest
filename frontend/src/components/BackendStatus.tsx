@@ -7,7 +7,7 @@ type Props = { className?: string };
 export default function BackendStatus({ className }: Props) {
   const [status, setStatus] = useState<"checking" | "ok" | "fail">("checking");
   const [ms, setMs] = useState<number | null>(null);
-  const BASE_URL = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND_URL)_URL))_URL);
+  const BASE_URL = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND))));
 
   useEffect(() => {
     let alive = true;
@@ -41,6 +41,7 @@ export default function BackendStatus({ className }: Props) {
     </span>
   );
 }
+
 
 
 
