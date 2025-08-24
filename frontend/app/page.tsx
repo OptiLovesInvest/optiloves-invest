@@ -1,42 +1,43 @@
-﻿"use client";
-
-import { useEffect, useState } from "react";
-
-type Item = { id: string; title: string; price: number; availableTokens: number };
-
 export default function Home() {
-  const [data, setData] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/properties", { headers: { accept: "application/json" } })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(await r.text());
-        return r.json();
-      })
-      .then(setData)
-      .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
-  }, []);
-
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ margin: 0 }}>OptiLoves Invest</h1>
-      <p style={{ color: "#555" }}>Live properties (from /properties)</p>
+    <main className="min-h-screen bg-white">
+      <section className="relative">
+        <div className="mx-auto max-w-5xl px-4 pt-10 pb-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Optiloves Invest</h1>
+          <p className="mt-3 text-base md:text-lg text-gray-700">
+            Tokenized access to African real estate &mdash; Focus: Kinshasa and Luanda.
+          </p>
+        </div>
 
-      {loading && <p>Loading…</p>}
-      {err && <p style={{ color: "crimson" }}>Error: {err}</p>}
+        <div className="mx-auto max-w-5xl px-4">
+          <img src="/hero.jpg" alt="Kinshasa and Nsele development" className="w-full h-64 md:h-96 object-cover rounded-2xl shadow" />
+        </div>
 
-      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
-        {data.map((it) => (
-          <div key={it.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-            <h3 style={{ marginTop: 0 }}>{it.title}</h3>
-            <div>Price: ${it.price}</div>
-            <div>Available Tokens: {it.availableTokens}</div>
+        <div className="mx-auto max-w-5xl px-4 py-6 text-center">
+          <p className="text-sm uppercase tracking-wide text-gray-600">Fighting poverty with love and investment</p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <a href="/properties" className="px-4 py-2 rounded-xl bg-black text-white hover:opacity-90">View properties</a>
+            <a href="/how-it-works" className="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50">How it works</a>
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a href="/faq" className="p-4 rounded-2xl border hover:bg-gray-50">
+            <div className="font-semibold">FAQ</div>
+            <div className="text-sm text-gray-600">Common questions</div>
+          </a>
+          <a href="/properties" className="p-4 rounded-2xl border hover:bg-gray-50">
+            <div className="font-semibold">Properties</div>
+            <div className="text-sm text-gray-600">Browse listed assets</div>
+          </a>
+          <a href="/wallet" className="p-4 rounded-2xl border hover:bg-gray-50">
+            <div className="font-semibold">Connect Wallet</div>
+            <div className="text-sm text-gray-600">Start investing</div>
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
