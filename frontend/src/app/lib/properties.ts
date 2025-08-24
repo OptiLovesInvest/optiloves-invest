@@ -1,1 +1,1 @@
-﻿export * from "../../lib/properties";
+export * from "../../lib/properties";

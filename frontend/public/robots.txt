@@ -1,4 +1,4 @@
 ﻿User-agent: *
 Allow: /
 
-Sitemap: https://app.optilovesinvest.com/sitemap.txt
+Sitemap: https://app.optilovesinvest.com/sitemap.xml

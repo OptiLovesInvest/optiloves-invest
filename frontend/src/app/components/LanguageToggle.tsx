@@ -1,1 +1,1 @@
-﻿"use client"; export { default } from "../../components/LanguageNav";
+"use client"; export { default } from "../../components/LanguageNav";

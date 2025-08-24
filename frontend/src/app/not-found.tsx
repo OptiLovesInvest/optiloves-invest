@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 export default function NotFound() {
   return (
     <main className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center">

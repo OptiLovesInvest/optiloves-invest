@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 export default function Page({ searchParams }: { searchParams: Record<string, string | string[] | undefined>; }) {
   const pid = String(searchParams.pid || "");
   const qty = Number(searchParams.qty || 0);

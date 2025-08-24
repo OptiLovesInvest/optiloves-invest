@@ -1,4 +1,4 @@
-﻿export type Lang = import("./i18n").Lang;
+export type Lang = import("./i18n").Lang;
 
 /**
  * Get current UI language.

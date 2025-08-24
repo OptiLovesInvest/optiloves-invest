@@ -1,4 +1,4 @@
-﻿export const metadata = { title: "Privacy Ã¢â‚¬â€ OptiLoves Invest" };
+export const metadata = { title: "Privacy Ã¢â‚¬â€ OptiLoves Invest" };
 export default function Privacy() {
   return (
     <main className="mx-auto max-w-3xl p-6 space-y-4">

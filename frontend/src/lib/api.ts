@@ -1,4 +1,4 @@
-﻿export async function getPortfolio(wallet: string) {
+export async function getPortfolio(wallet: string) {
   const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND)))!;
   const url = `${base}/portfolio?wallet=${encodeURIComponent(wallet)}`;
   const res = await fetch(url, { cache: "no-store" });

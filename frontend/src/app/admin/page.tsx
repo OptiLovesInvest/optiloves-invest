@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 const fmtDT = (ts: number) => new Date(ts * 1000).toLocaleString();
 

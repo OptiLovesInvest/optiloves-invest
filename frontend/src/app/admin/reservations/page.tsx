@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 type Res = { id: string; property_id: string; quantity: number; total: number; email?: string; ts?: number; };
 async function getData(): Promise<Res[]> {
   try {

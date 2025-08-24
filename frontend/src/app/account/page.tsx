@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import * as React from "react";
 import { getPortfolio, getOrders } from "../../lib/api";
 import { InvestmentsTable } from "../../components/InvestmentsTable";

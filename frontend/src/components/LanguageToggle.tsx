@@ -1,1 +1,1 @@
-﻿export { default } from "./LanguageNav";
+export { default } from "./LanguageNav";
