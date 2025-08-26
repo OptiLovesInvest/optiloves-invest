@@ -1,0 +1,62 @@
+import Link from "next/link";
+import { safeGetJSON } from "../lib/safe";
+
+type Property = {
+  id: string;
+  city?: string;
+  title?: string;
+  pricePerToken?: number;
+  availableTokens?: number;
+  image?: string;
+};
+
+async function getAll(): Promise<Property[]> {
+  const base = process.env.NEXT_PUBLIC_BACKEND?.replace(/\/+$/, "") ?? "";
+  const url = base ? `${base}/properties` : "";
+  if (!url) return [];
+  const res = await safeGetJSON<any>(url, { timeoutMs: 6000 });
+  const items: any[] = Array.isArray(res.data) ? res.data : (res.data?.value ?? []);
+  if (!res.ok) return [];
+  return items.map((p: any) => ({
+    id: String(p.id ?? ""),
+    city: String(p.city ?? p.name ?? "Unknown location"),
+    title: String(p.title ?? `ID: ${p.id ?? "n/a"}`),
+    pricePerToken: Number(p.pricePerToken ?? p.tokenPrice ?? 50),
+    availableTokens: Number(p.availableTokens ?? 0),
+    image: p.image ?? (String(p.id ?? "").startsWith("kin") ? "/images/kinshasa-nsele.jpg" : "/images/luanda-ilha.jpg"),
+  })).filter((p: Property) => p.id);
+}
+
+export default async function Properties() {
+  const list = await getAll();
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+      <h1 className="text-2xl font-bold">Properties</h1>
+      <div className="grid md:grid-cols-2 gap-6">
+        {list.map(p => (
+          <div key={p.id} className="border rounded-2xl overflow-hidden bg-white">
+            <img src={p.image ?? "/images/property-placeholder.jpg"} alt={p.city ?? "Property"} className="w-full h-44 object-cover" />
+            <div className="p-5 space-y-2">
+              <h3 className="font-medium">{p.city}</h3>
+              <p className="text-sm text-gray-600">{p.title}</p>
+              <div className="grid grid-cols-2 gap-3 text-sm pt-2">
+                <div className="rounded-lg border p-3">
+                  <div className="text-gray-500">Token price</div>
+                  <div className="font-semibold">${(p.pricePerToken ?? 50).toLocaleString()}</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-gray-500">Available</div>
+                  <div className="font-semibold">{(p.availableTokens ?? 0).toLocaleString()} tokens</div>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-3">
+                <Link href={`/property/${p.id}`} className="rounded-lg px-4 py-2 border">View</Link>
+                <Link href={`/property/${p.id}?action=buy`} className="rounded-lg px-4 py-2 bg-black text-white">Buy</Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}

@@ -1,0 +1,50 @@
+import * as React from "react";
+
+function safeSiteUrl() {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || "";
+  try {
+    const val = raw && /^https?:\/\//i.test(raw) ? raw : "https://optilovesinvest.com";
+    return new URL(val);
+  } catch {
+    return new URL("https://optilovesinvest.com");
+  }
+}
+
+function AnalyticsSnippet() {
+  const domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+  if (!domain) return null;
+  return (
+    <script
+      defer
+      data-domain={domain}
+      src="https://plausible.io/js/script.js"
+    />
+  );
+}
+
+export const metadata = {
+  metadataBase: safeSiteUrl(),
+  title: "Optiloves Invest â€” Tokenized access to African real estate",
+  description: "Invest from $50 per token. Focus: Kinshasa & Kinshasa. Fighting poverty with love and investment.",
+  openGraph: {
+    title: "Optiloves Invest",
+    description: "Invest from $50 per token. Focus: Kinshasa & Kinshasa.",
+    url: "/",
+    siteName: "Optiloves Invest",
+    images: ["/og/og-card.png"],
+    type: "website",
+  },
+  icons: { icon: "/favicon.ico" },
+  robots: { index: true, follow: true },
+} as const;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="antialiased bg-white text-gray-900">
+        <AnalyticsSnippet />
+        {children}
+      </body>
+    </html>
+  );
+}

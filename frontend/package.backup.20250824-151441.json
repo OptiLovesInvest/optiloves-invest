@@ -1,0 +1,34 @@
+{
+    "name": "optiloves-invest",
+    "private": true,
+    "version": "0.2.0",
+    "scripts": {
+        "dev": "next dev -p 3000",
+        "build": "npm run preflight && next build",
+        "start": "next start",
+        "preflight": "powershell -ExecutionPolicy Bypass -File scripts\\\\preflight.ps1"
+    },
+    "dependencies": {
+        "@sentry/nextjs": "^10.5.0",
+        "@solana/wallet-adapter-react": "^0.15.32",
+        "@solana/wallet-adapter-react-ui": "^0.9.39",
+        "@solana/wallet-adapter-wallets": "^0.19.23",
+        "@solana/web3.js": "^1.98.4",
+        "i18next": "^25.3.6",
+        "next": "14.2.5",
+        "next-i18next": "^15.4.2",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "react-i18next": "^15.6.1"
+    },
+    "type": "module",
+    "devDependencies": {
+        "@types/react": "19.1.9",
+        "autoprefixer": "^10.4.21",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^4.1.12"
+    },
+    "engines": {
+        "node": "20.x"
+    }
+}

@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* focus styles */
+:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+
+/* === optiloves: strict cap for ndaku image (188px) === */
+img[src*="ndaku-ngindu"]{
+  width:188px !important;
+  max-width:188px !important;
+  height:auto !important;
+  display:block !important;
+  margin-inline:auto !important; /* centered */
+  border-radius:0.75rem !important; /* rounded-xl */
+}

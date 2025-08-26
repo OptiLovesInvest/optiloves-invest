@@ -1,25 +1,16 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-static";
+
+import { NextResponse } from "next/server";
+import { properties } from "@/lib/properties";
 
 export async function GET() {
-  const url = process.env.NEXT_PUBLIC_BACKEND || process.env.BACKEND;
-  let data;
-  try {
-    if (url) {
-      const r = await fetch(`${url}/properties`, { cache: "no-store" });
-      data = await r.json();
+  return NextResponse.json(
+    { properties },
+    {
+      headers: {
+        // long-lived static cache; page pulls can still be fully static
+        "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
+      },
     }
-  } catch {}
-  if (!Array.isArray(data)) {
-    data = [
-      { id: "kin-001", title: "Kinshasa — Gombe Apartments", price: 50, available_tokens: 4997 },
-      { id: "lua-001", title: "Luanda — Ilha Offices",      price: 50, available_tokens: 3000 },
-    ];
-  }
-
-  // normalize potential bad dashes if any upstream issues
-  data = data.map(p => ({ ...p, title: String(p.title || "").replace(/â[\u0080-\u00BF]+/g, "—") }));
-
-  return new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json; charset=utf-8" }
-  });
+  );
 }
