@@ -3,7 +3,7 @@
     id: "kin-nsele",
     title: "Kinshasa — Nsele HQ",
     tokenPrice: 50,
-    availableLabel: "Available soon",
+    availableLabel: "Status: Coming soon",
     image: "/images/ndaku.jpg",
   };
   return (
@@ -26,3 +26,4 @@
     </main>
   );
 }
+
