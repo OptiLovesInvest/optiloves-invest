@@ -25,10 +25,10 @@ function AnalyticsSnippet() {
 export const metadata = {
   metadataBase: safeSiteUrl(),
   title: "Optiloves Invest ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tokenized access to African real estate",
-  description: "Invest from $50 per token. Focus: Kinshasa & Kinshasa. Fighting poverty with love and investment.",
+  description: "Invest from $50 per token. Focus: Kinshasa & Luanda. Fighting poverty with love and investment.",
   openGraph: {
     title: "Optiloves Invest",
-    description: "Invest from $50 per token. Focus: Kinshasa & Kinshasa.",
+    description: "Invest from $50 per token. Focus: Kinshasa & Luanda.",
     url: "/",
     siteName: "Optiloves Invest",
     images: ["/og/og-card.png"],

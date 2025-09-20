@@ -1,4 +1,4 @@
-﻿export default function Page() {
+export default function Page() {
   const PROPERTY = { id: "kin-nsele", title: "Kinshasa - Nsele HQ", tokenPrice: 50, availableLabel: "Available soon" };
 
   return (
@@ -25,7 +25,7 @@
             <h1 className="text-base font-semibold">Tokenized access to African real estate.</h1>
             <p className="text-xs">Invest from $50 per token. Focus: Kinshasa.</p>
             <div className="flex flex-wrap gap-2 pt-1">
-              <a href="/properties" className="px-3 py-1 rounded border text-xs hover:bg-gray-100">View properties · Read our Investor Pledge</a>
+              <a href="/properties">View properties</a> · <a href="/pledge">Read our Investor Pledge</a>
             </div>
           </div>
         </div>
