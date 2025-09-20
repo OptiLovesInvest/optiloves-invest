@@ -1,50 +1,30 @@
-import * as React from "react";
+import type { Metadata } from "next";
+import './globals.css';
 
-function safeSiteUrl() {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || "";
-  try {
-    const val = raw && /^https?:\/\//i.test(raw) ? raw : "https://optilovesinvest.com";
-    return new URL(val);
-  } catch {
-    return new URL("https://optilovesinvest.com");
-  }
-}
-
-function AnalyticsSnippet() {
-  const domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
-  if (!domain) return null;
-  return (
-    <script
-      defer
-      data-domain={domain}
-      src="https://plausible.io/js/script.js"
-    />
-  );
-}
-
-export const metadata = {
-  metadataBase: safeSiteUrl(),
-  title: "Optiloves Invest ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tokenized access to African real estate",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://optilovesinvest.com"),
+  title: "Optiloves Invest - Tokenized access to African real estate",
   description: "Invest from $50 per token. Focus: Kinshasa & Luanda. Fighting poverty with love and investment.",
   openGraph: {
     title: "Optiloves Invest",
     description: "Invest from $50 per token. Focus: Kinshasa & Luanda.",
-    url: "/",
+    url: "https://optilovesinvest.com",
     siteName: "Optiloves Invest",
-    images: ["/og/og-card.png"],
     type: "website",
+    images: ["/og/og-card.png"]
   },
-  icons: { icon: "/favicon.ico" },
-  robots: { index: true, follow: true },
-} as const;
+  twitter: {
+    card: "summary_large_image",
+    title: "Optiloves Invest",
+    description: "Invest from $50 per token. Focus: Kinshasa & Luanda.",
+    images: ["/og/og-card.png"]
+  }
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased bg-white text-gray-900">
-        <AnalyticsSnippet />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
