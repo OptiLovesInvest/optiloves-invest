@@ -1,4 +1,5 @@
-﻿export default function Properties() {
+﻿import Link from 'next/link';
+export default function Properties() {
   const P = {
     id: "kin-nsele",
     title: "Kinshasa — Nsele HQ",
@@ -19,11 +20,12 @@
           </div>
           <div className="pt-2 flex gap-3">
             <a href={`/property/${P.id}`} className="px-4 py-2 border rounded-lg">View</a>
-            <a href={`/property/${P.id}#buy`} className="px-4 py-2 border rounded-lg">Buy</a>
+            <Link href={`/property/${P.id}#buy`} className="px-4 py-2 border rounded-lg">Buy</Link>
           </div>
         </div>
       </article>
     </main>
   );
 }
+
 
