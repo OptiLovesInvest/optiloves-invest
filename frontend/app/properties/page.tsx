@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 export default function Properties() {
   const P = {
@@ -11,7 +12,9 @@ export default function Properties() {
     <main className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-2xl font-semibold mb-4">Properties</h1>
       <article className="rounded-2xl border overflow-hidden">
-        <img src={P.image} alt={P.title} className="w-full h-48 object-cover" />
+        <div className="relative w-full h-48">
+  <Image src={P.image} alt={P.title} fill className="object-cover" />
+</div>
         <div className="p-4 grid gap-2">
           <h2 className="font-semibold">{P.title}</h2>
           <div className="text-sm">

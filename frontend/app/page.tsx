@@ -1,4 +1,5 @@
-﻿import Link from 'next/link';
+import Image from 'next/image';
+import Link from 'next/link';
 export default function Page() {
   const PROPERTY = { id: "kin-nsele", title: "Kinshasa - Nsele HQ", tokenPrice: 50, availableLabel: "Available soon" };
 
@@ -8,7 +9,7 @@ export default function Page() {
       <header className="w-full border-b bg-white">
         <div className="mx-auto max-w-3xl px-3 py-2 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
-            <img src="/logo/optiloves-logo.png" alt="Optiloves Invest" style={{ height: "50px", width: "auto" }} />
+            <Image src="/logo/optiloves-logo.png" alt="Optiloves Invest" width={200} height={50} priority />
           </a>
           <nav className="text-xs flex items-center gap-4">
             <a href="/properties">Properties</a><a href="/learn">Learn</a><a href="/kyc">KYC</a><a href="/?lang=en">EN</a>
@@ -20,7 +21,9 @@ export default function Page() {
       <section className="w-full bg-gray-50">
         <div className="mx-auto max-w-3xl px-3 py-3 grid gap-3">
           <div className="overflow-hidden rounded-md border">
-            <img src="/images/ndaku.jpg" alt="Ndaku - Nsele HQ" style={{ width: "100%", height: "60px", objectFit: "cover", objectPosition: "center" }} />
+            <div className="relative w-full h-[60px]">
+  <Image src="/images/ndaku.jpg" alt="Ndaku - Nsele HQ" fill className="object-cover object-center" />
+</div>
           </div>
           <div className="grid gap-2">
             <h1 className="text-base font-semibold">Tokenized access to African real estate.</h1>
