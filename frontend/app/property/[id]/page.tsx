@@ -3,7 +3,7 @@ interface Props { params: { id: string } }
 export default function PropertyPage({ params }: Props) {
   const P = {
     id: "kin-nsele",
-    title: "Kinshasa — Nsele HQ",
+    title: "Kinshasa â€” Nsele HQ",
     tokenPrice: 50,
     image: "/images/ndaku.jpg",
   };

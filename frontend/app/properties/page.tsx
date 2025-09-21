@@ -2,7 +2,7 @@ import Link from 'next/link';
 export default function Properties() {
   const P = {
     id: "kin-nsele",
-    title: "Kinshasa â€” Nsele HQ",
+    title: "Kinshasa Ã¢â‚¬â€ Nsele HQ",
     tokenPrice: 50,
     availableLabel: "Status: Coming soon",
     image: "/images/ndaku.jpg",
