@@ -1,14 +1,14 @@
-﻿import Link from 'next/link';
-export default function Page() {
+export default function Home() {
   const PROPERTY = { id: "kin-nsele", title: "Kinshasa - Nsele HQ", tokenPrice: 50, availableLabel: "Available soon" };
 
   return (
     <main className="min-h-screen flex flex-col">
-      {/* Header (logo 50px) */}
+      {/* Header (tiny logo) */}
       <header className="w-full border-b bg-white">
         <div className="mx-auto max-w-3xl px-3 py-2 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
-            <img src="/logo/optiloves-logo.png" alt="Optiloves Invest" style={{ height: "50px", width: "auto" }} />
+            {/* FORCE tiny logo via inline style */}
+            <img src="/logo/optiloves-logo.png" alt="Optiloves Invest" style={{height:"10px", width:"auto"}} />
           </a>
           <nav className="text-xs flex items-center gap-4">
             <a href="/properties">Properties</a><a href="/learn">Learn</a><a href="/kyc">KYC</a><a href="/?lang=en">EN</a>
@@ -16,23 +16,25 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Hero (one tiny Ndaku image) */}
+      {/* Hero (tiny height) */}
       <section className="w-full bg-gray-50">
         <div className="mx-auto max-w-3xl px-3 py-3 grid gap-3">
           <div className="overflow-hidden rounded-md border">
-            <img src="/images/ndaku.jpg" alt="Ndaku - Nsele HQ" style={{ width: "100%", height: "60px", objectFit: "cover", objectPosition: "center" }} />
+            {/* FORCE tiny hero via inline style */}
+            <img src="/images/ndaku.jpg" alt="Ndaku - Nsele HQ" style={{width:"100%", height:"72px", objectFit:"cover", objectPosition:"center"}} />
           </div>
           <div className="grid gap-2">
             <h1 className="text-base font-semibold">Tokenized access to African real estate.</h1>
             <p className="text-xs">Invest from $50 per token. Focus: Kinshasa.</p>
             <div className="flex flex-wrap gap-2 pt-1">
-              <a href="/properties">View properties</a> Â· <a href="/pledge">Read our Investor Pledge</a>
+              <a href="/properties" className="px-3 py-1 rounded border text-xs hover:bg-gray-100">View properties</a>
+              <a href="/pledge" className="px-3 py-1 rounded border text-xs hover:bg-gray-100">Read our Investor Pledge</a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Properties: one card, no image */}
+      {/* Properties: ONE card, no image */}
       <section className="w-full">
         <div className="mx-auto max-w-3xl px-3 py-3">
           <h2 className="text-sm font-semibold mb-2">Properties</h2>
@@ -45,14 +47,14 @@ export default function Page() {
               </div>
               <div className="pt-2 flex gap-2">
                 <a href={`/property/${PROPERTY.id}`} className="px-3 py-1 rounded border text-xs hover:bg-gray-100">View</a>
-                <a href="/api/checkout" className="px-3 py-1 rounded border text-xs hover:bg-gray-100">Buy</a>
+                <a href={`/property/${PROPERTY.id}#buy`} className="px-3 py-1 rounded border text-xs hover:bg-gray-100">Buy</a>
               </div>
             </div>
           </article>
         </div>
       </section>
 
-      {/* Footer (ASCII) */}
+      {/* Footer (ASCII only to avoid encoding issues) */}
       <footer className="mt-auto w-full border-t bg-white">
         <div className="mx-auto max-w-3xl px-3 py-3 text-xs">
           <div className="flex flex-wrap gap-3">
@@ -65,5 +67,3 @@ export default function Page() {
     </main>
   );
 }
-
-

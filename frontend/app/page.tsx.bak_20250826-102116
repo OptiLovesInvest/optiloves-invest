@@ -1,0 +1,73 @@
+export default function Home() {
+  const PROPERTY = {
+    id: "kin-nsele",
+    title: "Kinshasa â€” Nsele HQ",
+    tokenPrice: 50,
+    availableLabel: "Available soon",
+    image: "/images/ndaku.jpg",
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col">
+      <header className="w-full border-b bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-3">
+            <img src="/logo/optiloves-logo.png" alt="Optiloves Invest" className="h-10 w-auto" />
+          </a>
+          <nav className="text-sm flex items-center gap-6">
+            <a href="/properties">Properties</a>
+            <a href="/learn">Learn</a>
+            <a href="/kyc">KYC</a>
+            <a href="/?lang=en">EN</a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="w-full bg-gray-50">
+        <div className="mx-auto max-w-6xl px-4 py-8 grid gap-6">
+          <div className="overflow-hidden rounded-2xl border">
+</div>
+          <div className="grid gap-3">
+            <h1 className="text-2xl md:text-3xl font-semibold">Tokenized access to African real estate.</h1>
+            <p>Invest from $50 per token. Focus: Kinshasa.</p>
+            <div className="flex gap-3 pt-2">
+              <a href="/properties" className="px-4 py-2 border rounded-lg">View properties</a>
+              <a href="/pledge" className="px-4 py-2 border rounded-lg">Read our Investor Pledge</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full">
+        <div className="mx-auto max-w-6xl px-4 py-8">
+          <h2 className="text-xl font-semibold mb-4">Properties</h2>
+          <article className="rounded-2xl border overflow-hidden">
+<div className="p-4 grid gap-2">
+              <h3 className="font-semibold">{PROPERTY.title}</h3>
+              <div className="text-sm">
+                <div>Token price: ${PROPERTY.tokenPrice}</div>
+                <div>Available: {PROPERTY.availableLabel}</div>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <a href={`/property/${PROPERTY.id}`} className="px-4 py-2 border rounded-lg">View</a>
+                <a href={`/property/${PROPERTY.id}#buy`} className="px-4 py-2 border rounded-lg">Buy</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer className="mt-auto w-full border-t bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-sm">
+          <div className="flex gap-4">
+            <span>Â© 2025 Optiloves Invest</span>
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/contact">Contact</a>
+          </div>
+          <div className="text-gray-600 mt-2">FIGHTING POVERTY WITH LOVE AND INVESTMENT</div>
+        </div>
+      </footer>
+    </main>
+  );
+}
