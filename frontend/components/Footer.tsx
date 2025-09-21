@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
-          <Link href="/kyc">KYC</Link>
+          <Link href="/api/checkout">KYC</Link>
           <Link href="/contact">Contact</Link>
         </div>
       </div>

@@ -7,7 +7,7 @@ export default function Header() {
         <Link href="/" className="font-semibold">OptiLoves</Link>
         <div className="flex items-center gap-4 text-sm">
           <Link href="/properties">Properties</Link>
-          <Link href="/kyc">KYC</Link>
+          <Link href="/api/checkout">KYC</Link>
           <Link href="/contact">Contact</Link>
           <Link href="/privacy" className="hidden sm:inline">Privacy</Link>
           <Link href="/terms" className="hidden sm:inline">Terms</Link>

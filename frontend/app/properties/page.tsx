@@ -23,7 +23,7 @@ export default function Properties() {
           </div>
           <div className="pt-2 flex gap-3">
             <a href={`/property/${P.id}`} className="px-4 py-2 border rounded-lg">View</a>
-            <Link href={`/kyc?property=${P.id}`} className="px-4 py-2 border rounded-lg">Buy</Link>
+            <Link href={`/api/checkout?property=${P.id}`} className="px-4 py-2 border rounded-lg">Buy</Link>
           </div>
         </div>
       </article>

@@ -12,7 +12,7 @@ export default function Page() {
             <Image src="/logo/optiloves-logo.png" alt="Optiloves Invest" width={200} height={50} priority />
           </a>
           <nav className="text-xs flex items-center gap-4">
-            <a href="/properties">Properties</a><a href="/learn">Learn</a><a href="/kyc">KYC</a><a href="/?lang=en">EN</a>
+            <a href="/properties">Properties</a><a href="/learn">Learn</a><a href="/api/checkout">KYC</a><a href="/?lang=en">EN</a>
           </nav>
         </div>
       </header>

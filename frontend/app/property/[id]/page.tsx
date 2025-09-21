@@ -16,7 +16,7 @@ export default function PropertyPage({ params }: Props) {
 </div>
       <div className="mt-4 grid gap-2">
         <div>Token price: ${P.tokenPrice}</div>
-        <Link href={`/kyc?property=${params.id}`} className="rounded-lg px-2 py-1 bg-black text-white">Buy</Link>
+        <Link href={`/api/checkout?property=${params.id}`} className="rounded-lg px-2 py-1 bg-black text-white">Buy</Link>
       </div>
     </main>
   );
