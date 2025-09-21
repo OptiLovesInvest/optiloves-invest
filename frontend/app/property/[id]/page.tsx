@@ -13,7 +13,7 @@ export default function PropertyPage({ params }: Props) {
       <img src={P.image} alt={P.title} className="w-full h-72 object-cover rounded-2xl border" />
       <div className="mt-4 grid gap-2">
         <div>Token price: ${P.tokenPrice}</div>
-        <a href={`/property/${P.id}#buy`} className="px-4 py-2 border rounded-lg inline-block">Buy</a>
+        <Link href="/kyc" className="rounded-lg px-2 py-1 bg-black text-white">Buy</Link>
       </div>
     </main>
   );
