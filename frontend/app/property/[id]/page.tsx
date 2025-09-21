@@ -3,7 +3,7 @@ interface Props { params: { id: string } }
 export default function PropertyPage({ params }: Props) {
   const P = {
     id: "kin-nsele",
-    title: "Kinshasa â€” Nsele HQ",
+    title: "Kinshasa — Nsele HQ",
     tokenPrice: 50,
     image: "/images/ndaku.jpg",
   };
@@ -13,7 +13,7 @@ export default function PropertyPage({ params }: Props) {
       <img src={P.image} alt={P.title} className="w-full h-72 object-cover rounded-2xl border" />
       <div className="mt-4 grid gap-2">
         <div>Token price: ${P.tokenPrice}</div>
-        <Link href="/kyc" className="rounded-lg px-2 py-1 bg-black text-white">Buy</Link>
+        <Link href={`/kyc?property=${params.id}`} className="rounded-lg px-2 py-1 bg-black text-white">Buy</Link>
       </div>
     </main>
   );
