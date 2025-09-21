@@ -16,7 +16,7 @@ export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const host = req.headers.get("host");
 
-  // Redirect apex → app. (only applies if apex ever points here)
+  // Redirect apex â†’ app. (only applies if apex ever points here)
   if (host === "optilovesinvest.com") {
     const to = new URL(url.href);
     to.host = "app.optilovesinvest.com";
@@ -42,7 +42,7 @@ export function middleware(req: NextRequest) {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-  ].join("; ");
+  ].join(" https://api.devnet.solana.com wss://api.devnet.solana.com; ");
 
   res.headers.set("Content-Security-Policy", csp);
   res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
