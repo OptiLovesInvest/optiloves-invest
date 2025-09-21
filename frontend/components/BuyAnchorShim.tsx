@@ -4,7 +4,7 @@ import { useEffect } from "react";
 export default function BuyAnchorShim(){
   useEffect(() => {
     const onClick = (e) => {
-      const a = e.target?.closest?.("a[href='#buy']");
+      const a = e.target?.closest?.("a[href="/api/checkout"]");
       if (!a) return;
       e.preventDefault();
       const slug = location.pathname.split("/").pop() || "";
