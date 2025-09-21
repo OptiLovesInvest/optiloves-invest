@@ -2,7 +2,7 @@ import Link from 'next/link';
 export default function Properties() {
   const P = {
     id: "kin-nsele",
-    title: "Kinshasa — Nsele HQ",
+    title: "Kinshasa â€” Nsele HQ",
     tokenPrice: 50,
     availableLabel: "Status: Coming soon",
     image: "/images/ndaku.jpg",
@@ -20,7 +20,7 @@ export default function Properties() {
           </div>
           <div className="pt-2 flex gap-3">
             <a href={`/property/${P.id}`} className="px-4 py-2 border rounded-lg">View</a>
-            <Link href={`/kyc?property=${P.id}`} className="px-4 py-2 border rounded-lg">Buy</Link>
+            <Link href={`/kyc?property=${P.id}`} href={`/kyc?property=${P.id}`} className="px-4 py-2 border rounded-lg">Buy</Link>
           </div>
         </div>
       </article>
