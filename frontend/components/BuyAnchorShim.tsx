@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 
 export default function BuyAnchorShim(){
-  useEffect(() => {
+  useEffect(() => { console.log("[OptiShim] mounted:", (typeof location!=="undefined")?location.pathname:"(no dom)");
     const onClick = (e) => {
       const a = e.target?.closest?.("a[href="/api/checkout"]");
       if (!a) return;
