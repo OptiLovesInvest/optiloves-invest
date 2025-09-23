@@ -1,7 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 export const metadata = {
-  title: "Investor Pledge — Optiloves Invest",
+  title: "Investor Pledge â€” Optiloves Invest",
   description: "Our commitment to investors and communities.",
 };
 
@@ -9,7 +9,7 @@ export default function Pledge() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Optiloves Invest — Investor Pledge</h1>
+        <h1 className="text-2xl font-bold">Optiloves Invest â€” Investor Pledge</h1>
         <Link href="/" className="text-sm underline">Back to home</Link>
       </header>
 
@@ -28,19 +28,19 @@ export default function Pledge() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-semibold">Français</h2>
-          <p>Chez Optiloves Invest, notre mission est de rendre l’investissement immobilier accessible à tous tout en luttant contre la pauvreté par l’amour et l’investissement.</p>
+          <h2 className="font-semibold">FranÃ§ais</h2>
+          <p>Chez Optiloves Invest, notre mission est de rendre lâ€™investissement immobilier accessible Ã  tous tout en luttant contre la pauvretÃ© par lâ€™amour et lâ€™investissement.</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Créer de la richesse via l’immobilier :</strong> Les fonds issus de la vente de tokens financent de nouveaux biens locatifs en Afrique, à commencer par Kinshasa (siège de Nsele).</li>
-            <li><strong>Coûts justes & transparents :</strong> Nous ne retenons que 5% pour l’administration et les opérations (juridique, comptabilité, plateforme et gestion immobilière). 95% vont directement au développement immobilier.</li>
-            <li><strong>Revenus locatifs partagés :</strong> Les revenus locatifs générés sont distribués aux détenteurs de tokens, proportionnellement à leur investissement.</li>
-            <li><strong>Mission d’inclusion :</strong> Avec un ticket d’entrée à 50 $ par token, nous permettons à tous d’investir, pas seulement aux plus aisés.</li>
+            <li><strong>CrÃ©er de la richesse via lâ€™immobilier :</strong> Les fonds issus de la vente de tokens financent de nouveaux biens locatifs en Afrique, Ã  commencer par Kinshasa (siÃ¨ge de Nsele).</li>
+            <li><strong>CoÃ»ts justes & transparents :</strong> Nous ne retenons que 5% pour lâ€™administration et les opÃ©rations (juridique, comptabilitÃ©, plateforme et gestion immobiliÃ¨re). 95% vont directement au dÃ©veloppement immobilier.</li>
+            <li><strong>Revenus locatifs partagÃ©s :</strong> Les revenus locatifs gÃ©nÃ©rÃ©s sont distribuÃ©s aux dÃ©tenteurs de tokens, proportionnellement Ã  leur investissement.</li>
+            <li><strong>Mission dâ€™inclusion :</strong> Avec un ticket dâ€™entrÃ©e Ã  50Â $ par token, nous permettons Ã  tous dâ€™investir, pas seulement aux plus aisÃ©s.</li>
           </ul>
         </section>
       </div>
 
       <footer className="text-xs text-gray-500">
-        © 2025 Optiloves Invest • FIGHTING POVERTY WITH LOVE AND INVESTMENT
+        Â© 2025 Optiloves Invest â€¢ FIGHTING POVERTY WITH LOVE AND INVESTMENT
       </footer>
     </main>
   );

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 
 export default function StatusBadge() {
@@ -23,7 +23,7 @@ export default function StatusBadge() {
   }, []);
 
   const color = ok === null ? "#aaa" : ok ? "#16a34a" : "#dc2626"; // gray / green / red
-  const text  = ok === null ? "Checking…" : ok ? "Backend: Live" : "Backend: Down";
+  const text  = ok === null ? "Checkingâ€¦" : ok ? "Backend: Live" : "Backend: Down";
 
   return (
     <div style={{

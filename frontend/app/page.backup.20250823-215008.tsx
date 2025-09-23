@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -25,7 +25,7 @@ export default function Home() {
       <h1 style={{ margin: 0 }}>OptiLoves Invest</h1>
       <p style={{ color: "#555" }}>Live properties (from /properties)</p>
 
-      {loading && <p>Loading…</p>}
+      {loading && <p>Loadingâ€¦</p>}
       {err && <p style={{ color: "crimson" }}>Error: {err}</p>}
 
       <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>

@@ -1,5 +1,5 @@
-export const metadata = {
-  title: "Learn — Optiloves Invest",
+﻿export const metadata = {
+  title: "Learn â€” Optiloves Invest",
   description: "How Optiloves Invest works: tokens, rental income, fees, and security.",
 };
 
@@ -15,7 +15,7 @@ export default function LearnPage() {
         <details className="border rounded-xl p-5" open>
           <summary className="font-semibold cursor-pointer">What is a property token?</summary>
           <p className="mt-2 text-gray-700">
-            A digital unit that represents exposure to a specific real‑estate project listed on our platform.
+            A digital unit that represents exposure to a specific realâ€‘estate project listed on our platform.
             Tokens are recorded on blockchain for transparent balances and transfers.
           </p>
         </details>
@@ -28,7 +28,7 @@ export default function LearnPage() {
         <details className="border rounded-xl p-5">
           <summary className="font-semibold cursor-pointer">How are funds used?</summary>
           <p className="mt-2 text-gray-700">
-            95% of funds go directly into developing new rental properties (starting with Kinshasa — Nsele HQ).
+            95% of funds go directly into developing new rental properties (starting with Kinshasa â€” Nsele HQ).
             Up to 5% covers administration and operations (legal, accounting, platform, property management).
           </p>
         </details>
@@ -43,7 +43,7 @@ export default function LearnPage() {
         <details className="border rounded-xl p-5">
           <summary className="font-semibold cursor-pointer">Which blockchain do you use?</summary>
           <p className="mt-2 text-gray-700">
-            The MVP uses Solana for fast, low‑cost transactions. Wallet integrations (e.g., Phantom) allow you to view and manage your tokens.
+            The MVP uses Solana for fast, lowâ€‘cost transactions. Wallet integrations (e.g., Phantom) allow you to view and manage your tokens.
           </p>
         </details>
 
@@ -57,13 +57,13 @@ export default function LearnPage() {
         <details className="border rounded-xl p-5">
           <summary className="font-semibold cursor-pointer">Where do I start?</summary>
           <p className="mt-2 text-gray-700">
-            Visit the Properties page, select a project, and choose “Buy”. New investors should review the Investor Pledge first.
+            Visit the Properties page, select a project, and choose â€œBuyâ€. New investors should review the Investor Pledge first.
           </p>
         </details>
       </section>
 
       <footer className="text-xs text-gray-500">
-        © 2025 Optiloves Invest • FIGHTING POVERTY WITH LOVE AND INVESTMENT
+        Â© 2025 Optiloves Invest â€¢ FIGHTING POVERTY WITH LOVE AND INVESTMENT
       </footer>
     </main>
   );

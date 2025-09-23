@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect } from "react";
 
 export default function BuyAnchorShim(){
@@ -41,7 +41,7 @@ export default function BuyAnchorShim(){
       const slug = location.pathname.split("/").pop() || "";
       const map  = { "kin-nsele": "kin-001" };
       const propertyId = (map as any)[slug] || slug || "kin-001";
-      console.log("[OptiShim] redirect → /api/checkout?property=", propertyId);
+      console.log("[OptiShim] redirect â†’ /api/checkout?property=", propertyId);
       location.href = `/api/checkout?property=${encodeURIComponent(propertyId)}`;
     }
 

@@ -1,4 +1,4 @@
-export async function safeGetJSON<T = unknown>(url: string, opts?: RequestInit & { timeoutMs?: number }): Promise<{ ok: boolean; data: T | null; status?: number; error?: string; }> {
+﻿export async function safeGetJSON<T = unknown>(url: string, opts?: RequestInit & { timeoutMs?: number }): Promise<{ ok: boolean; data: T | null; status?: number; error?: string; }> {
   const timeoutMs = opts?.timeoutMs ?? 6000;
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeoutMs);

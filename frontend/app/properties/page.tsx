@@ -1,9 +1,9 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import Link from 'next/link';
 export default function Properties() {
   const P = {
     id: "kin-nsele",
-    title: "Kinshasa Ã¢â‚¬â€ Nsele HQ",
+    title: "Kinshasa ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nsele HQ",
     tokenPrice: 50,
     availableLabel: "Status: Coming soon",
     image: "/images/ndaku.jpg",

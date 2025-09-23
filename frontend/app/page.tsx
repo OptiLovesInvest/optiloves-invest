@@ -1,4 +1,4 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import Link from 'next/link';
 export default function Page() {
   const PROPERTY = { id: "kin-nsele", title: "Kinshasa - Nsele HQ", tokenPrice: 50, availableLabel: "Available soon" };
@@ -29,7 +29,7 @@ export default function Page() {
             <h1 className="text-base font-semibold">Tokenized access to African real estate.</h1>
             <p className="text-xs">Invest from $50 per token. Focus: Kinshasa.</p>
             <div className="flex flex-wrap gap-2 pt-1">
-              <a href="/properties">View properties</a> Â· <a href="/pledge">Read our Investor Pledge</a>
+              <a href="/properties">View properties</a> Ã‚Â· <a href="/pledge">Read our Investor Pledge</a>
             </div>
           </div>
         </div>
