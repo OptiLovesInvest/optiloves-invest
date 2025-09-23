@@ -5,18 +5,3 @@ h1,h2,h3{letter-spacing:.2px}
 .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
 a.btn{display:inline-block;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(34,211,238,.25)}
 a.btn:hover{filter:brightness(1.06)}
-/* --- property page polish --- */
-.property-shell{max-width:1100px;margin:24px auto;padding:24px}
-.property-main{display:grid;grid-template-columns:2fr 1fr;gap:24px}
-@media (max-width:1024px){.property-main{grid-template-columns:1fr}}
-.property-card{background:#111827;border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
-.property-hero img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px}
-.property-body p{margin:0 0 12px;font-size:17px;line-height:1.7;color:#e5e7eb}
-.property-body h1{margin:0 0 12px;font-size:32px;letter-spacing:.2px}
-.property-body h2{margin:16px 0 8px;font-size:22px;color:#cbd5e1}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 12px}
-.kv dt{color:#9ca3af}
-.kv dd{margin:0;color:#e5e7eb}
-a.btn-primary{display:inline-block;padding:12px 18px;border-radius:12px;background:#0ea5e9;color:#fff;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(14,165,233,.35)}
-a.btn-primary:hover{filter:brightness(1.06)}
-/* --- end property page polish --- */
