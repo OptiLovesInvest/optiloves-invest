@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 import { usePathname } from "next/navigation";
 
 export default function FloatingBuy(){
   const pathname = usePathname() || ""; console.log("[FloatingBuy] on", pathname); console.log("[FloatingBuy] mounted on", pathname);
   const slug = pathname.split("/").pop() || "";
   const map: Record<string,string> = { "kin-nsele":"kin-001" };
-  const propertyId = map[slug] ?? slug || "kin-001";
+  const propertyId = (map[slug] ?? slug) || "kin-001";
   return (
     <a
       href={`/api/checkout?property=${encodeURIComponent(propertyId)}`}
