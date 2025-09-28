@@ -1,4 +1,4 @@
-import Script from "next/script";
+﻿import Script from "next/script";
 import FloatingBuy from "@/components/FloatingBuy";
 
 export default function PropertySlugLayout({

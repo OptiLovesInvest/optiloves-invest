@@ -8,7 +8,9 @@ export function middleware(_req: NextRequest) {
 
 // Apply to all routes except Next.js internals
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Apply middleware ONLY to real pages; exclude api/_next/thank-you automatically
+  matcher: ['/property/:path*','/properties','/kyc','/account','/','/pledge','/terms'],
 };
+
 
 

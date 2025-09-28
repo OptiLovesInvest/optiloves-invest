@@ -1,4 +1,4 @@
-import FloatingBuy from "@/components/FloatingBuy";
+﻿import FloatingBuy from "@/components/FloatingBuy";
 
 export default function PropertySlugLayout({
   children,

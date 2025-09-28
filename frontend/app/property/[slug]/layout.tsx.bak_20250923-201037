@@ -1,4 +1,4 @@
-import BuyAnchorShim from "@/components/BuyAnchorShim";
+﻿import BuyAnchorShim from "@/components/BuyAnchorShim";
 
 export default function PropertySlugLayout({
   children,

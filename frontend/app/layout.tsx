@@ -1,4 +1,4 @@
-import "../styles/ui.css";
+﻿import "../styles/ui.css";
 import "../styles/ui-polish.css";
 import type { Metadata } from "next";
 import './globals.css';
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>{/* build:76e62e58 */}{children}  <BuyAnchorShim />
-  </body>
+    </body>
     </html>
   );
 }
