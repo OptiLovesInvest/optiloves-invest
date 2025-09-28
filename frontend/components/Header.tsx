@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 export default function Header() {
   return (
@@ -9,11 +9,12 @@ export default function Header() {
           <Link href="/properties">Properties</Link>
           <Link href="/api/checkout">KYC</Link>
           <Link href="/contact">Contact</Link>
-          <Link href="/privacy" className="hidden sm:inline">Privacy</Link>
-          <Link href="/terms" className="hidden sm:inline">Terms</Link>
+          <Link href="/privacy" className=" sm:inline">Privacy</Link>
+          <Link href="/terms" className=" sm:inline">Terms</Link>
         </div>
       </nav>
     </header>
   );
 }
+
 
