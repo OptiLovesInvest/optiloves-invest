@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-static";
+export const dynamic = "force-static";
 export default function Page() {
   return (
     <main className="max-w-xl mx-auto px-6 py-16 text-center">

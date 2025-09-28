@@ -1,4 +1,4 @@
-﻿export default function Properties() {
+export default function Properties() {
   const P = {
     id: "kin-nsele",
     title: "Kinshasa — Nsele HQ",

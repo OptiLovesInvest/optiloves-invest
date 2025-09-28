@@ -1,4 +1,4 @@
-﻿export type Property = {
+export type Property = {
   id: string;
   title: string;
   city: string;

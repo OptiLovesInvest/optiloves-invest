@@ -1,4 +1,4 @@
-﻿export const metadata = {
+export const metadata = {
   title: "Learn â€” Optiloves Invest",
   description: "How Optiloves Invest works: tokens, rental income, fees, and security.",
 };

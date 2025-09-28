@@ -1,4 +1,4 @@
-﻿export const metadata = {
+export const metadata = {
   title: "Contact â€” Optiloves Invest",
   description: "Get in touch with Optiloves Invest.",
 };
