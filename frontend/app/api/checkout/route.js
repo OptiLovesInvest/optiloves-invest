@@ -1,4 +1,5 @@
-﻿import { NextResponse } from "next/server";
+﻿export const runtime = 'nodejs';
+import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
@@ -28,3 +29,4 @@ export async function GET(req) {
     return NextResponse.json({ ok:false, error:String(e) }, { status: 500 });
   }
 }
+
