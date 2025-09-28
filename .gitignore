@@ -16,3 +16,6 @@ backend/.env
 *.json.key
 
 .vercel
+
+_backup_utf8_*
+
