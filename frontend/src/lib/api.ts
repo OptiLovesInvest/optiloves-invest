@@ -1,60 +1,17 @@
-export async function getPortfolio(wallet: string) {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND)))!;
-  const url = `${base}/portfolio?wallet=${encodeURIComponent(wallet)}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Portfolio fetch failed: ${res.status}`);
-  return res.json();
+﻿export function getApiBase() {
+  const base = import.meta.env.VITE_API_BASE;
+  if (!base) throw new Error("VITE_API_BASE missing");
+  return base.replace(/\/+$/, "");
 }
 
-export async function getOrders(wallet: string) {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND)))!;
-  const url = `${base}/orders?wallet=${encodeURIComponent(wallet)}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Orders fetch failed: ${res.status}`);
-  return res.json();
+export async function postJson(path, payload) {
+  const r = await fetch(`${getApiBase()}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const text = await r.text();
+  let data; try { data = JSON.parse(text); } catch { data = { raw:text }; }
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${JSON.stringify(data)}`);
+  return data;
 }
-/**
- * Request a SOL airdrop for a given address.
- * Tries backend POST /airdrop first (if you have it),
- * then falls back to Solana devnet JSON-RPC (client-side).
- */
-export async function apiAirdrop(address: string, amountLamports: number = 1_000_000_000) {
-  const base = (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? (process.env.NEXT_PUBLIC_BACKEND ?? process.env.NEXT_PUBLIC_BACKEND)));
-
-  // 1) Try your backend proxy (if implemented)
-  if (base) {
-    try {
-      const res = await fetch(`${base}/airdrop`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, amountLamports }),
-      });
-      if (res.ok) return res.json();
-    } catch {
-      // fall through to client RPC
-    }
-  }
-
-  // 2) Fallback: direct devnet JSON-RPC (will NOT work on mainnet)
-  const cluster = (process.env.NEXT_PUBLIC_SOL_CLUSTER || "devnet").toLowerCase();
-  if (cluster === "devnet") {
-    const rpc = "https://api.devnet.solana.com";
-    const res = await fetch(rpc, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "requestAirdrop",
-        params: [address, amountLamports],
-      }),
-    });
-    if (!res.ok) throw new Error(`Airdrop RPC failed: ${res.status}`);
-    return res.json(); // { result: <signature> } shape
-  }
-
-  throw new Error("Airdrop is disabled on this cluster.");
-}
-
-
-

@@ -1,25 +1,13 @@
-﻿import { NextResponse, NextRequest } from "next/server";
-
-const PROTECT_PATH = process.env.PROTECT_PATH || "/*";
-const user = process.env.ADMIN_USER || "";
-const pass = process.env.ADMIN_PASS || "";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const url = req.nextUrl;
-  // Match using URLPattern
-  // @ts-ignore - URLPattern is available at runtime
-  const protect = new URLPattern({ pathname: PROTECT_PATH });
-  // @ts-ignore
-  if (!protect.test(url)) return NextResponse.next();
-
-  const auth = req.headers.get("authorization") || "";
-  const expected = "Basic " + Buffer.from(`${user}:${pass}`).toString("base64");
-  if (auth === expected) return NextResponse.next();
-
-  return new NextResponse("Auth required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Optiloves"' },
-  });
+  if (req.nextUrl.pathname === "/property/kin-001") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/api/checkout";
+    url.search = "property=kin-001";
+    return NextResponse.redirect(url, 307);
+  }
+  return NextResponse.next();
 }
-
-export const config = { matcher: ["/((?!_next|static|favicon.ico).*)"] };
+export const config = { matcher: ["/property/kin-001"] };

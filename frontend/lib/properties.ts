@@ -21,3 +21,4 @@ export const properties: Property[] = [
     status: "available",
   },
 ] as const;
+
