@@ -1,3 +1,4 @@
+﻿import BuyButton from '../../../components/BuyButton';
 import Link from "next/link";
 
 export default function Page() {
@@ -19,3 +20,8 @@ export default function Page() {
     </main>
   );
 }
+
+<div className="mt-6 flex"><BuyButton propertyId="kin-001" /></div>
+
+
+ 
