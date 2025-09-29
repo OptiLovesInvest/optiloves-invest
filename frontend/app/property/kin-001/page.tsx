@@ -21,7 +21,16 @@ export default function Page() {
         <p>Use the floating Buy button (bottom-right) to start checkout.</p>
       </div>
 
-      <BuyFloating />
+        <div className="mt-6">
+    <Link
+      href="/api/checkout?property=kin-001&owner=69CJqijdBsRg6FdcXZxrtPnjJwsYy1mRcWPpATLxXF6B"
+      className="inline-flex items-center rounded-xl px-4 py-2 bg-black text-white font-semibold border border-white/30"
+    >
+      Buy
+    </Link>
+  </div>
+
+  <BuyFloating />
     </main>
   );
 }

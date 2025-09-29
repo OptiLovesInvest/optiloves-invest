@@ -24,7 +24,7 @@ export default function BuyFloating() {
     <button
       onClick={handleBuy}
       disabled={busy}
-      className="fixed bottom-6 right-6 z-50 rounded-2xl px-5 py-3 shadow-lg bg-black text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+      className="fixed bottom-6 right-6 z-\[99999\] rounded-2xl px-6 py-3.5 shadow-lg bg-black text-white text-base font-semibold hover:opacity-90 disabled:opacity-60 border border-white/40"
       aria-label="Buy"
       title="Buy"
     >
