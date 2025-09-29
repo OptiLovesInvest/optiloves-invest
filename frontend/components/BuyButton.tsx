@@ -1,37 +1,22 @@
-﻿"use client";
-import React from "react";
-
-export default function BuyButton({ propertyId = "kin-001" }: { propertyId?: string }) {
-  const [busy, setBusy] = React.useState(false);
-
-  const getOwner = () => {
-    try {
-      const o = localStorage.getItem("owner") || "";
-      if (o) return o;
-      const p = window.prompt("Enter your wallet address");
-      if (p) localStorage.setItem("owner", p);
-      return p || "";
-    } catch { return ""; }
-  };
-
+"use client";
+import React, { useState } from "react";
+export default function BuyButton({ propertyId, quantity = 1 }:{ propertyId:string; quantity?:number }) {
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   const onBuy = async () => {
-    const owner = getOwner();
-    if (!owner) return;
-    setBusy(true);
     try {
-      const r = await fetch(`/api/checkout?property=${encodeURIComponent(propertyId)}&owner=${encodeURIComponent(owner)}`, { cache: "no-store" });
-      const data = await r.json().catch(() => ({}));
-      if (data?.ok && data?.url) window.location.href = data.url;
-      else alert("Checkout failed. Please try again.");
-    } catch {
-      alert("Network error. Please try again.");
-    } finally { setBusy(false); }
+      setLoading(true); setMsg(null);
+      const r = await fetch("/api/checkout", { method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ property_id: propertyId, quantity }) });
+      const j = await r.json();
+      setMsg(j?.ok ? "Checkout ready." : "Could not start checkout.");
+      if (j?.url) location.href = j.url;
+    } catch { setMsg("Network error."); } finally { setLoading(false); }
   };
-
-  return (
-    <button onClick={onBuy} disabled={busy}
-      className="px-5 py-2 rounded-2xl shadow text-white bg-black disabled:opacity-60 z-[9999] relative">
-      {busy ? "Processing…" : "Buy"}
+  return (<div className="mt-6">
+    <button id="buy-always-visible" onClick={onBuy} className="px-5 py-3 rounded-2xl shadow font-semibold" disabled={loading}>
+      {loading ? "Processing…" : "Buy"}
     </button>
-  );
+    {msg && <p className="text-sm mt-2">{msg}</p>}
+  </div>);
 }
