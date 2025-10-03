@@ -22,9 +22,15 @@ async function proxyCheckout(body: any) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({} as any));
+  if (!body?.property_id || typeof body.property_id !== "string" || !body.property_id.trim()) {
+    return NextResponse.json({ ok:false, error:"invalid_property_id" }, { status: 400 });
+  }
   const r = await proxyCheckout(body);
-  if (!r.ok) return NextResponse.json({ ok:false, error:"checkout_failed", backend:r.data }, { status: r.status });
+  if (!r.ok) {
+    console.error("checkout_failed", { status: r.status, backend: r.data });
+    return NextResponse.json({ ok:false, error:"checkout_failed", backend:r.data }, { status: r.status });
+  }
   return NextResponse.json(r.data, { status: 200 });
 }
 
