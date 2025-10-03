@@ -4,10 +4,12 @@ export default function BuyButton({ propertyId, quantity = 1 }:{ propertyId:stri
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const onBuy = async () => {
+  const params = new URLSearchParams((typeof window!=="undefined" && window.location && window.location.search) || "");
+  const owner = params.get("owner") || undefined;
     try {
       setLoading(true); setMsg(null);
       const r = await fetch("/api/checkout", { method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ property_id: propertyId, quantity }) });
+        body: JSON.stringify({ property_id: propertyId, quantity, owner }) });
       const j = await r.json();
       setMsg(j?.ok ? "Checkout ready." : "Could not start checkout.");
       if (j?.url) location.href = j.url;
