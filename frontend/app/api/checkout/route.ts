@@ -3,6 +3,30 @@ import { NextResponse } from "next/server";
 const BACKEND = process.env.BACKEND_URL || "https://optiloves-backend.onrender.com";
 const API_KEY = process.env.OPTI_API_KEY || "";
 
+// --- Simple per-IP rate limit (5/min) ---
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 5;
+// @ts-ignore
+const __rateMap: Map<string, number[]> = (globalThis as any).__optiRateMap || new Map();
+// @ts-ignore
+(globalThis as any).__optiRateMap = __rateMap;
+
+function getIP(req: Request) {
+  const xff = req.headers.get("x-forwarded-for") || "";
+  const xrip = req.headers.get("x-real-ip") || "";
+  const ip = (xff.split(",")[0]?.trim()) || xrip || "local";
+  return ip;
+}
+function allow(ip: string) {
+  const now = Date.now();
+  const list = __rateMap.get(ip) || [];
+  const pruned = list.filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+  if (pruned.length >= RATE_LIMIT_MAX) return false;
+  pruned.push(now); __rateMap.set(ip, pruned);
+  return true;
+}
+
+// --- Proxy to backend ---
 async function proxyCheckout(body: any) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 10000);
@@ -39,5 +63,5 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  return NextResponse.json({ ok:true, proxy:"checkout", backend: BACKEND }, { status: 200 });
+  return NextResponse.json({ ok:true, proxy:"checkout", backend: BACKEND, rateLimit:{ windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX } }, { status: 200 });
 }
