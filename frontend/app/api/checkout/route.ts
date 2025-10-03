@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from "next/server";
 
 const BACKEND = process.env.BACKEND_URL || "https://optiloves-backend.onrender.com";
@@ -65,6 +67,9 @@ export async function POST(req: Request) {
 export async function GET() {
   return NextResponse.json(
     { ok:true, proxy:"checkout", backend: BACKEND, rateLimit:{ windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX } },
+    { status: 200, headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+  );
+} },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 } }, { status: 200 });
