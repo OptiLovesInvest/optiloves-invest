@@ -1,4 +1,4 @@
-﻿import BuyFloating from "../../_components/BuyFloating";
+import BuyFloating from "../../_components/BuyFloating";
 interface Props { params: { id: string } }
 
 export default function PropertyPage({ params }: Props) {
@@ -18,7 +18,7 @@ export default function PropertyPage({ params }: Props) {
       </div>
       <div className="mt-4 grid gap-2">
         <div>Token price: ${P.tokenPrice}</div>
-        <p>Use the floating button (bottom-right) to start checkout.</p>
+        <p></p>
       </div>
       <BuyFloating />
     </main>
