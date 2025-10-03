@@ -22,6 +22,10 @@ async function proxyCheckout(body: any) {
 }
 
 export async function POST(req: Request) {
+  const ip = getIP(req);
+  if (!allow(ip)) {
+    return NextResponse.json({ ok:false, error:"rate_limited" }, { status: 429 });
+  }
   const body = await req.json().catch(() => ({} as any));
   if (!body?.property_id || typeof body.property_id !== "string" || !body.property_id.trim()) {
     return NextResponse.json({ ok:false, error:"invalid_property_id" }, { status: 400 });
