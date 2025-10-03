@@ -4,13 +4,13 @@ export async function POST(req: Request) {
   const quantity = Number(body?.quantity ?? 1);
   const owner = body?.owner;
 
-  // Demo-friendly: if no owner yet (wallet not connected), just succeed
-  ),
-      { headers: { "content-type": "application/json" }, status: 200 }
+  if (!owner) {
+    return new Response(
+      JSON.stringify({ ok: false, error: "missing owner" }),
+      { headers: { "content-type": "application/json" }, status: 400 }
     );
   }
 
-  // Proxy to backend when owner is present
   const BE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://optiloves-backend.onrender.com";
   const r = await fetch(`${BE}/buy/checkout`, {
     method: "POST",
