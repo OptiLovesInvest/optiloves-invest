@@ -4,7 +4,13 @@ export async function POST(req: Request) {
   const quantity = Number(body?.quantity ?? 1);
   const owner = body?.owner;
 
-  if (!owner) {
+  // Optional demo mode: allow ownerless checkout when env flag is "true"
+  if (!owner && process.env.NEXT_PUBLIC_ALLOW_OWNERLESS_CHECKOUT === "true") {
+    return new Response(
+      JSON.stringify({ ok: true, url: "/thank-you", property_id, quantity, note: "owner missing -> stubbed via env" }),
+      { headers: { "content-type": "application/json" }, status: 200 }
+    );
+  }if (!owner) {
     return new Response(
       JSON.stringify({ ok: false, error: "missing owner" }),
       { headers: { "content-type": "application/json" }, status: 400 }
