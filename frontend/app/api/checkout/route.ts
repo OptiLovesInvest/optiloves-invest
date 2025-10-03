@@ -5,9 +5,7 @@ export async function POST(req: Request) {
   const owner = body?.owner;
 
   // Demo-friendly: if no owner yet (wallet not connected), just succeed
-  if (!owner) {
-    return new Response(
-      JSON.stringify({ ok: true, url: "/thank-you", property_id, quantity, note: "owner missing -> stubbed redirect" }),
+  ),
       { headers: { "content-type": "application/json" }, status: 200 }
     );
   }
