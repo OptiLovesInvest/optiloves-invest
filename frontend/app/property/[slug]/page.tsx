@@ -1,4 +1,4 @@
-import BuyButton from "../../../components/BuyButton";
+import BuyButton from "../../../components/BuyButtonWithOwner";
 export default function Page({ params }:{ params:{ slug:string } }) {
   const slug = params.slug;
   const map: Record<string,string> = { "kin-001":"kin-001", "lua-001":"lua-001" };

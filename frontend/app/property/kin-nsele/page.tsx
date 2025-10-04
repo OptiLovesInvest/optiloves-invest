@@ -1,4 +1,4 @@
-import BuyButton from "../../../components/BuyButton";
+import BuyButton from "../../../components/BuyButtonWithOwner";
 
 export default function Page() {
   const propertyId = "kin-nsele";
