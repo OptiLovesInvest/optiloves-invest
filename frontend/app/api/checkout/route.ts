@@ -1,40 +1,45 @@
-export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({} as any));
-  const property_id = body?.property_id ?? "kin-001";
-  const quantity = Number(body?.quantity ?? 1);
-  const owner = body?.owner;
+﻿import { NextRequest, NextResponse } from "next/server";
+export const runtime = "nodejs";
 
-  // Optional demo mode: allow ownerless checkout when env flag is "true"
-  if (!owner && process.env.NEXT_PUBLIC_ALLOW_OWNERLESS_CHECKOUT === "true") {
-    return new Response(
-      JSON.stringify({ ok: true, url: "/thank-you", property_id, quantity, note: "owner missing -> stubbed via env" }),
-      { headers: { "content-type": "application/json" }, status: 200 }
-    );
-  }if (!owner) {
-    return new Response(
-      JSON.stringify({ ok: false, error: "missing owner" }),
-      { headers: { "content-type": "application/json" }, status: 400 }
-    );
-  }
-
-  const BE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://optiloves-backend.onrender.com";
-  const r = await fetch(`${BE}/buy/checkout`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ property_id, quantity, owner }),
-    cache: "no-store",
-  });
-
-  let data: any = null;
-  try { data = await r.json(); } catch {}
-
-  if (r.ok && data?.url) {
-    return new Response(JSON.stringify({ ok: true, url: data.url }), {
-      headers: { "content-type": "application/json" }, status: 200
-    });
-  }
-
-  return new Response(JSON.stringify({ ok: false, error: "checkout_failed", backend: data ?? null }), {
-    headers: { "content-type": "application/json" }, status: 400
-  });
+export async function GET() {
+  const hasKey = !!process.env.OPTI_API_KEY && process.env.OPTI_API_KEY.length > 5;
+  const be = process.env.BACKEND_URL || "https://optiloves-backend.onrender.com";
+  return NextResponse.json({ ok:true, stage:"proxy", hasKey, be });
 }
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({} as any));
+const { property_id = "kin-001", quantity = 1 } = body || {};
+const owner = (body?.owner || process.env.DEFAULT_OWNER || "").toString();
+
+  const BE = process.env.BACKEND_URL || "https://optiloves-backend.onrender.com";
+  const API_KEY = process.env.OPTI_API_KEY || "";
+
+  try {
+    const res = await fetch(`${BE}/buy/checkout`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": API_KEY
+      },
+      body: JSON.stringify({ property_id, quantity, owner }),
+      cache: "no-store",
+    });
+
+    const text = await res.text();
+    let data: any = {};
+    try { data = JSON.parse(text); } catch {}
+
+    if (res.ok && (data?.url || data?.ok)) {
+      return NextResponse.json({ ok:true, url: data.url ?? "/thank-you" });
+    }
+
+    return NextResponse.json(
+      { ok:false, status: res.status, error: data?.error ?? text ?? "unknown error" },
+      { status: 502 }
+    );
+  } catch (e:any) {
+    return NextResponse.json({ ok:false, error: String(e?.message || e) }, { status: 500 });
+  }
+}
+

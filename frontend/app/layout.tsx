@@ -1,8 +1,9 @@
 import "../styles/ui.css";
-import GlobalBuyButton from "../components/GlobalBuyButton";
 import "../styles/ui-polish.css";
 import type { Metadata } from "next";
 import './globals.css';
+
+import GlobalBuyButton from "@/components/GlobalBuyButton";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://optilovesinvest.com"),
@@ -29,7 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>{/* build:76e62e58 */}{children}  <BuyAnchorShim />
-    </body>
+        <GlobalBuyButton />
+</body>
     </html>
   );
 }
