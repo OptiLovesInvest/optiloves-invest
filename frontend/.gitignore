@@ -19,3 +19,6 @@ package.backup.json
 pages/
 app/property/kin-001/page.tsx.bak
 app/property/kin-001/route.bak.ts
+
+# allow SSR Buy page
+!src/app/buy/**
