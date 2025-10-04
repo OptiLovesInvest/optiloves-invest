@@ -1,13 +1,13 @@
-import BuyButton from "../../../components/BuyButtonWithOwner";
-
+export const dynamic = 'force-static';
 export default function Page() {
-  const propertyId = "kin-nsele";
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold">Kinshasa — Nsele HQ</h1>
-      <p className="mt-2 text-sm">Token price: $50</p>
-      {/* Always-visible fallback button */}
-      <BuyButton propertyId={propertyId} />
+    <main style={{padding:24}}>
+      <h1>Kin-Nsele — Static Override</h1>
+      <p>Temporary static page to unblock launch.</p>
+      <a id="buy-static-cta" href="/thank-you"
+         style={{position:'fixed',bottom:16,right:16,zIndex:2147483647,
+                 padding:'10px 16px',borderRadius:9999,background:'#111',
+                 color:'#fff',fontWeight:600,textDecoration:'none'}}>Buy Now</a>
     </main>
   );
 }

@@ -1,36 +1,25 @@
-﻿"use client";
+"use client";
 
 export default function GlobalBuyButton() {
-  async function handleBuy() {
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          property_id: "kin-001",
-          quantity: 1,
-          owner: "69CJqijdBsRg6FdcXZxrtPnjJwsYy1mRcWPpATLxXF6B" // pilot wallet
-        })
-      });
-      const j = await res.json();
-      if (j?.ok && j?.url) {
-        window.location.href = j.url;
-      } else {
-        // graceful fallback keeps flow unblocked
-        window.location.href = "/thank-you";
-      }
-    } catch {
-      window.location.href = "/thank-you";
-    }
-  }
-
+  if (process.env.NEXT_PUBLIC_FORCE_BUY !== "1") return null;
   return (
-    <button id="buy-fallback-fixed"
-      onClick={handleBuy}
-      style={{position:"fixed",bottom:16,right:16,zIndex:2147483647,
-              padding:"10px 16px",borderRadius:9999,background:"#111",
-              color:"#fff",fontWeight:600,cursor:"pointer"}}>
+    <a
+      id="buy-static-cta"
+      href="/thank-you"
+      style={{
+        position: "fixed",
+        bottom: 16,
+        right: 16,
+        zIndex: 2147483647,
+        padding: "10px 16px",
+        borderRadius: 9999,
+        background: "#111",
+        color: "#fff",
+        fontWeight: 600,
+        textDecoration: "none",
+      }}
+    >
       Buy Now
-    </button>
+    </a>
   );
 }
