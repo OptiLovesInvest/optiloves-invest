@@ -23,3 +23,7 @@ _backup_utf8_*
 _backup_utf8_*
 
 frontend/.env.local
+
+/_backup_utf8_*
+
+frontend/.githooks/
