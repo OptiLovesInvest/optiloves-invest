@@ -27,3 +27,7 @@ frontend/.env.local
 /_backup_utf8_*
 
 frontend/.githooks/
+
+/_backup_utf8_*
+
+frontend/.githooks/
