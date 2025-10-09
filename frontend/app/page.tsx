@@ -1,1 +1,2 @@
-﻿export default function Page(){return(<main style={{padding:24}}><h1>Optiloves Invest</h1><p>Baseline restored.</p></main>);}
+import { redirect } from "next/navigation";
+export default function Page(){ redirect("/property/kin-nsele"); return null; }
