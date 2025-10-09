@@ -1,9 +1,14 @@
-﻿<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Thank you</title>
-</head><body>
-<main style="padding:24px;max-width:720px;margin:0 auto">
-  <h1 style="font-size:32px;font-weight:800;margin:12px 0">Thank you</h1>
-  <p style="font-size:16px;opacity:.9">Your interest has been recorded.</p>
-</main>
+﻿<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thank you</title></head>
+<body style="font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px">
+  <main>
+    <h1>Thank you</h1>
+    <p>Your request was received. We’ll be in touch shortly.</p>
+    <p id="oid"></p>
+  </main>
+  <script>
+    const p=new URLSearchParams(location.search); const v=p.get('oid');
+    if(v) document.getElementById('oid').textContent = 'Order: '+v;
+  </script>
 </body></html>
