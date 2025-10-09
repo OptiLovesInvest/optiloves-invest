@@ -1,9 +1,9 @@
-﻿/** @type {import('next').NextConfig} */
+﻿/** @type {import("next").NextConfig} */
 const nextConfig = {
-  poweredByHeader: false,
-  reactStrictMode: true,
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true }
+  async redirects() {
+    return [
+      { source: "/", destination: "/thank-you", permanent: false },
+    ];
+  },
 };
 export default nextConfig;
-
