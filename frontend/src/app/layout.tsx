@@ -1,7 +1,6 @@
-﻿export const metadata = { title: "Optiloves Invest" };
+export const metadata = { title: "Optiloves Invest" };
 
-import BuyClient from "@/components/BuyClient";
-export default function RootLayout(){
+export default function RootLayout({ children }:{ children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
