@@ -1,3 +1,4 @@
+﻿import Link from 'next/link';
 export default function BuyFixed() {
   return (
     <a id="buy-fixed" href="/thank-you"
