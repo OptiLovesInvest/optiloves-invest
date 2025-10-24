@@ -1,5 +1,3 @@
 ﻿{
-  "redirects": [
-    { "source": "/", "destination": "/thank-you", "permanent": false }
-  ]
+  "version": 2
 }
