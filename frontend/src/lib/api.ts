@@ -1,8 +1,8 @@
 ﻿export type AirdropResult = { ok: boolean; signature?: string; error?: string };
 
-export async function apiAirdrop(address: string, amountLamports: number): Promise<AirdropResult> {
+// Default to 1 SOL (1_000_000_000 lamports) if amount not provided
+export async function apiAirdrop(address: string, amountLamports: number = 1_000_000_000): Promise<AirdropResult> {
   try {
-    // Try hitting a Next.js API route if you wire one later; safe for build.
     const res = await fetch("/api/airdrop", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
