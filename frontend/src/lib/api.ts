@@ -1,17 +1,17 @@
-﻿export function getApiBase() {
-  const base = import.meta.env.VITE_API_BASE;
-  if (!base) throw new Error("VITE_API_BASE missing");
-  return base.replace(/\/+$/, "");
-}
+﻿export type AirdropResult = { ok: boolean; signature?: string; error?: string };
 
-export async function postJson(path, payload) {
-  const r = await fetch(`${getApiBase()}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const text = await r.text();
-  let data; try { data = JSON.parse(text); } catch { data = { raw:text }; }
-  if (!r.ok) throw new Error(`HTTP ${r.status}: ${JSON.stringify(data)}`);
-  return data;
+export async function apiAirdrop(address: string, amountLamports: number): Promise<AirdropResult> {
+  try {
+    // Try hitting a Next.js API route if you wire one later; safe for build.
+    const res = await fetch("/api/airdrop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address, amountLamports })
+    });
+    if (!res.ok) return { ok: false, error: "http " + res.status };
+    const data = await res.json();
+    return data as AirdropResult;
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
 }
