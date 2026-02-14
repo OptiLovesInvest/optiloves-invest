@@ -1,4 +1,4 @@
-.vercel
+﻿.vercel
 
 # Sentry Config File
 .env.sentry-build-plugin
@@ -9,7 +9,6 @@
 *.bak.ts
 *_backup.*
 _backups/
-Buy
 kin.html
 page.html
 scripts/Test-Buy.ps1
@@ -22,3 +21,8 @@ app/property/kin-001/route.bak.ts
 
 # allow SSR Buy page
 !src/app/buy/**
+
+# allow Buy routes
+!app/buy/**
+!app/buy/**/*
+
