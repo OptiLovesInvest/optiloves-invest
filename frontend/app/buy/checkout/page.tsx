@@ -1,18 +1,25 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function BuyCheckoutPage() {
   const [msg, setMsg] = useState("Preparing checkout…");
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     (async () => {
       try {
-        // Keep this minimal and stable: call our Next API route which returns { ok:true, url:"..." }
+        const rawQty = searchParams.get("qty");
+        let quantity = parseInt(rawQty || "1", 10);
+
+        if (isNaN(quantity) || quantity < 1) quantity = 1;
+        if (quantity > 100) quantity = 100;
+
         const res = await fetch("/api/checkout", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ propertyId: "kin-001", quantity: 1 }),
+          body: JSON.stringify({ propertyId: "kin-001", quantity }),
         });
 
         const j = await res.json().catch(() => ({} as any));
@@ -23,7 +30,7 @@ export default function BuyCheckoutPage() {
         setMsg("Checkout is temporarily unavailable. Please try again.");
       }
     })();
-  }, []);
+  }, [searchParams]);
 
   return (
     <main className="min-h-screen p-6">
