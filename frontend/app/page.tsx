@@ -58,7 +58,7 @@
               </div>
               <div className="sm:col-span-2">
                 <dt className="opacity-70">Distribution</dt>
-                <dd className="font-medium">.50 per token per quarter (USDC)</dd>
+                <dd className="font-medium">$1.50 per token per quarter (USDC)</dd>
             <p className="mt-2 text-sm opacity-85">
               Token holders receive rental-income distributions only (no voting rights).
             </p>
@@ -107,5 +107,6 @@
     </main>
   );
 }
+
 
 
