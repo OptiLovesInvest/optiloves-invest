@@ -1,9 +1,8 @@
-﻿export const runtime = "nodejs";
+﻿"use client";
+
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-"use client";
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -48,5 +47,6 @@ export default function BuyCheckoutPage() {
     </main>
   );
 }
+
 
 
