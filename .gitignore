@@ -31,3 +31,13 @@ frontend/.githooks/
 /_backup_utf8_*
 
 frontend/.githooks/
+# --- Local artifacts / backups (do not commit) ---
+backend/**/metadata/
+backend/**/ops/
+backend/**/payouts/
+backend/**/*.bak*
+backend/**/*.json
+backend/**/*.txt
+backend/**/*.sql
+backend/**/package-lock.json
+frontend/**/*.bak*
