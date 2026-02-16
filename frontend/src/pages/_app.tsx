@@ -13,7 +13,7 @@ export default function App({ Component, pageProps }: AppProps) {
       {isProperty && (
         <>
           {/* SSR fallback visible in raw HTML (no JS/probes) */}
-          <a
+          <Link
             id="buy-ssr-fallback"
             href="/thank-you"
             style={{
@@ -39,5 +39,6 @@ export default function App({ Component, pageProps }: AppProps) {
     </>
   );
 }
+
 
 
