@@ -13,8 +13,8 @@ export default function BuyCheckoutPage() {
   useEffect(() => {
     (async () => {
       try {
-        const rawQty = searchParams.get("qty");
-        let quantity = parseInt(rawQty || "1", 10);
+        const rawQty = searchParams?.get("qty") ?? "1";
+        let quantity = parseInt(rawQty, 10);
 
         if (isNaN(quantity) || quantity < 1) quantity = 1;
         if (quantity > 100) quantity = 100;
@@ -47,6 +47,7 @@ export default function BuyCheckoutPage() {
     </main>
   );
 }
+
 
 
 
