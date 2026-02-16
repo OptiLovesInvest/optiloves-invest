@@ -31,7 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
             }}
           >
             Buy
-          </a>
+          </Link>
           {/* Client floating CTA on top for real users */}
           <GlobalBuyButton />
         </>
@@ -39,4 +39,5 @@ export default function App({ Component, pageProps }: AppProps) {
     </>
   );
 }
+
 
