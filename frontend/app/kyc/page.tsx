@@ -11,7 +11,7 @@ export default function KycRedirectPage() {
   useEffect(() => {
     const flowUrl = process.env.NEXT_PUBLIC_KYC_FLOW_URL;
 
-    if (!flowUrl || !/^https?:\/\/?/i.test(flowUrl)) {
+    if (!flowUrl || !/^https?:\/\//i.test(flowUrl)) {
       setMsg("KYC is not configured. Missing or invalid NEXT_PUBLIC_KYC_FLOW_URL.");
       return;
     }
