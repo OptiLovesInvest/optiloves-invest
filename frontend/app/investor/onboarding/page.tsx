@@ -1,14 +1,18 @@
 ﻿"use client";
 
 export default function InvestorOnboardingPage() {
-  const flowUrl = process.env.NEXT_PUBLIC_KYC_FLOW_URL;
+  const flowUrl = process.env.NEXT_PUBLIC_KYC_FLOW_URL || "";
 
   const startKyc = () => {
     if (!flowUrl) {
-      alert("KYC Flow URL missing in Vercel settings.");
+      alert("KYC Flow URL missing in Vercel env: NEXT_PUBLIC_KYC_FLOW_URL");
       return;
     }
-    window.location.href = flowUrl;
+    if (!/^https?:\/\//i.test(flowUrl)) {
+      alert("KYC Flow URL looks invalid (must start with https://).");
+      return;
+    }
+    window.location.assign(flowUrl);
   };
 
   return (
@@ -29,6 +33,10 @@ export default function InvestorOnboardingPage() {
       >
         Start KYC Verification
       </button>
+
+      <div style={{ marginTop: 12, fontSize: 12, opacity: 0.8 }}>
+        Debug: flowUrl = {flowUrl ? flowUrl.slice(0,35) + "…" : "(empty)"}
+      </div>
     </main>
   );
 }
