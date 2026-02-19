@@ -30,7 +30,7 @@ export default function HomePage() {
                 href={kycHref}
                 className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
               >
-                Complete KYC
+                Verify identity (KYC)
               </a>
               <a
                 href={propertyHref}
@@ -40,7 +40,7 @@ export default function HomePage() {
               </a>
 
               <div className="sm:ml-auto text-xs text-slate-500">
-                Private placement • Wallet ownership • On-chain tracking
+                Private placement • KYC required • Distributions paid in USDC
               </div>
             </div>
 
@@ -142,7 +142,7 @@ export default function HomePage() {
                 href={kycHref}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
               >
-                Complete KYC
+                Verify identity (KYC)
               </a>
               <p className="mt-2 text-xs text-slate-500 text-center">Takes under 10 minutes</p>
             </div>
@@ -156,7 +156,7 @@ export default function HomePage() {
           <h2 className="text-xl font-semibold">How it works</h2>
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
             {[
-              { n: "1", t: "Complete KYC", d: "Verify identity for private placement compliance." },
+              { n: "1", t: "Verify identity (KYC)", d: "Verify identity for private placement compliance." },
               { n: "2", t: "Connect wallet", d: "Own tokens directly in your wallet." },
               { n: "3", t: "Purchase tokens", d: "Start from $50 per token." },
               { n: "4", t: "Track holdings", d: "Portfolio updates are wallet-based." },
@@ -238,3 +238,4 @@ export default function HomePage() {
     </main>
   );
 }
+
