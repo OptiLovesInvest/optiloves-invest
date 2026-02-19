@@ -17,7 +17,7 @@ export default function HomePage() {
               </p>
 
               <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Invest in tokenized African real estate from <span className="whitespace-nowrap">$50</span>.
+                Invest in tokenized African real estate with a minimum initial allocation of <span className="whitespace-nowrap">$50</span>.
               </h1>
 
               <p className="max-w-2xl text-base text-slate-700 sm:text-lg">
@@ -158,7 +158,7 @@ export default function HomePage() {
             {[
               { n: "1", t: "Verify identity (KYC)", d: "Verify identity for private placement compliance." },
               { n: "2", t: "Connect wallet", d: "Own tokens directly in your wallet." },
-              { n: "3", t: "Purchase tokens", d: "Start from $50 per token." },
+              { n: "3", t: "Purchase tokens", d: "Start with a minimum initial allocation of $50 per token." },
               { n: "4", t: "Track holdings", d: "Portfolio updates are wallet-based." },
               { n: "5", t: "Receive USDC", d: "Quarterly distributions, pro-rated by days held." },
             ].map((s) => (
@@ -238,4 +238,7 @@ export default function HomePage() {
     </main>
   );
 }
+
+
+
 
