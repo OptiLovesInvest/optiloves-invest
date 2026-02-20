@@ -150,33 +150,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CAPITAL PHILOSOPHY */}
-      <section className="mx-auto max-w-6xl px-6 pb-12">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-semibold">Our Capital Philosophy</h2>
-
-          <div className="mt-4 space-y-3 text-sm text-slate-700">
-            <p>
-              Optiloves Invest allocates capital with discipline and long-term conviction.
-            </p>
-            <p>
-              We focus on income-producing real assets that create sustainable value for families, communities, and investors alike.
-            </p>
-            <p>
-              We believe wealth should be built patiently — through transparency, alignment, and structured quarterly distributions backed by real rental income.
-            </p>
-            <p className="font-medium text-slate-900">
-              Our goal is not rapid scale, but durable growth.
-            </p>
-
-            <div className="pt-2 text-slate-800">
-              <div>We invest with love.</div>
-              <div>We allocate with discipline.</div>
-              <div>We build for generations.</div>
-            </div>
-          </div>
-        </div>
-      </section>
       {/* HOW IT WORKS */}
       <section className="mx-auto max-w-6xl px-6 pb-12">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -265,7 +238,6 @@ export default function HomePage() {
     </main>
   );
 }
-
 
 
 
