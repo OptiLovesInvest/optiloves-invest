@@ -19,7 +19,7 @@ export default function Apply() {
       wallet: String(fd.get("wallet") || "").trim(),
       amount_usd: Number(String(fd.get("amount_usd") || "0").trim()),
       note: String(fd.get("note") || "").trim(),
-      website: String(fd.get("website") || "").trim() // honeypot (should stay empty)
+      website: String(fd.get("website") || "").trim()
     };
 
     try {
@@ -49,8 +49,9 @@ export default function Apply() {
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: 24, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial" }}>
       <h1 style={{ fontSize: 28, marginBottom: 8 }}>Apply to Invest</h1>
+
       <p style={{ marginTop: 0 }}>
-        Private placement onboarding. Minimum allocation: <b></b>. Maximum per investor: <b>,000</b>.
+        Private placement onboarding. Minimum allocation: <b>$100</b>. Maximum per investor: <b>$1,000</b>.
       </p>
 
       <form onSubmit={onSubmit} style={{ marginTop: 18, display: "grid", gap: 12 }}>
@@ -90,7 +91,6 @@ export default function Apply() {
           <textarea name="note" rows={4} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.2)" }} />
         </label>
 
-        {/* honeypot */}
         <input name="website" tabIndex={-1} autoComplete="off" style={{ display: "none" }} />
 
         <button disabled={status === "sending"}
