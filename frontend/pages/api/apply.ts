@@ -47,7 +47,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const text = await r.text();
-    res.status(r.status);
+res.status(r.status);
+
+// If upstream rejects, return its response (no secrets)
+if (!r.ok) {
+  try {
+    return res.json({ ok: false, upstreamStatus: r.status, upstream: JSON.parse(text) });
+  } catch {
+    return res.json({ ok: false, upstreamStatus: r.status, upstream: text });
+  }
+}
 
     // If upstream rejects, return upstream + what we sent (no secrets)
     if (!r.ok) {
