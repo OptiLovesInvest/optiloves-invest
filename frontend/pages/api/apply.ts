@@ -20,7 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         "content-type": "application/json",
         "x-api-key": apiKey,
       },
-      body: JSON.stringify(req.body),
+            body: JSON.stringify({
+        ...req.body,
+        // Backend expects "amount" in USD (100–1000)
+        amount: Number((req.body as any)?.amount ?? (req.body as any)?.allocation),
+        // Also keep allocation for logging/debugging if backend ignores it
+        allocation: Number((req.body as any)?.allocation ?? (req.body as any)?.amount),
+      }),
     });
 
     const text = await r.text();
