@@ -18,6 +18,7 @@ export default function Apply() {
       country: String(fd.get("country") || "").trim(),
       wallet: String(fd.get("wallet") || "").trim(),
       amount_usd: Number(String(fd.get("amount_usd") || "0").trim()),
+      amount: Number(String(fd.get("amount_usd") || "0").trim()),
       note: String(fd.get("note") || "").trim(),
       website: String(fd.get("website") || "").trim()
     };
@@ -106,7 +107,7 @@ export default function Apply() {
       </p>
 
       <p style={{ marginTop: 28, fontSize: 13, opacity: 0.75 }}>
-        Optiloves Invest — Prosper through Love and Investment.
+        Optiloves Invest â€” Prosper through Love and Investment.
       </p>
     </main>
   );
