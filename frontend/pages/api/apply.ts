@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       allocation: Number(body.allocation ?? body.amount),
     };
 
-    const r = await fetch(${backend}/api/apply, {
+    const r = await fetch(`${backend}/api/apply`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
