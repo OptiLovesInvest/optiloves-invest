@@ -14,29 +14,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ ok: false, error: "Missing server env OPTI_BACKEND_URL or OPTI_API_KEY" });
     }
 
+    const body: any = req.body || {};
+
+    // Normalize amount: backend validates "amount" (100..1000)
+    const amountNum = Number(body.amount ?? body.allocation);
+
+    const payload = {
+      ...body,
+      amount: amountNum,
+      allocation: Number(body.allocation ?? body.amount),
+    };
+
     const r = await fetch(`${backend}/api/apply`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
         "x-api-key": apiKey,
       },
-            body: JSON.stringify({
-        ...req.body,
-        // Backend expects "amount" in USD (100–1000)
-        amount: Number((req.body as any)?.amount ?? (req.body as any)?.allocation),
-        // Also keep allocation for logging/debugging if backend ignores it
-        allocation: Number((req.body as any)?.allocation ?? (req.body as any)?.amount),
-      }),
+      body: JSON.stringify(payload),
     });
 
     const text = await r.text();
-    res.status(r.status);
 
-    // Try to return JSON, otherwise return raw text
+    // Debug on upstream error: return what we sent + upstream response (no secrets)
+    if (!r.ok) {
+      try {
+        return res.status(r.status).json({ ok: false, upstream: JSON.parse(text), sent: payload });
+      } catch {
+        return res.status(r.status).json({ ok: false, upstream: text, sent: payload });
+      }
+    }
+
+    // Success: return upstream response
     try {
-      return res.json(JSON.parse(text));
+      return res.status(r.status).json(JSON.parse(text));
     } catch {
-      return res.send(text);
+      return res.status(r.status).send(text);
     }
   } catch (e: any) {
     return res.status(500).json({ ok: false, error: e?.message || "Proxy error" });
