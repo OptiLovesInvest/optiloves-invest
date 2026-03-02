@@ -1,4 +1,4 @@
-﻿from flask import Flask, jsonify, Response
+from flask import Flask, jsonify, Response
 
 app = Flask(__name__)
 
@@ -68,3 +68,71 @@ async function load(){
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5050)
+
+
+# ---------------------------
+# Optiloves Invest — API (Apply)
+# Stability-first minimal routes
+# ---------------------------
+from flask import request, jsonify
+import os
+
+def _opti_require_api_key():
+    expected = os.getenv("OPTILOVES_API_KEY") or os.getenv("OPTI_API_KEY")
+    # If no key configured, fail closed (security-first)
+    if not expected:
+        return jsonify({"ok": False, "error": "Server missing OPTILOVES_API_KEY"}), 500
+
+    got = request.headers.get("x-api-key", "")
+    if not got or got != expected:
+        return jsonify({"ok": False, "error": "Unauthorized"}), 401
+    return None
+
+@app.get("/api/ping")
+def api_ping():
+    gate = _opti_require_api_key()
+    if gate: return gate
+    return jsonify({"ok": True})
+
+@app.get("/api/routes")
+def api_routes():
+    gate = _opti_require_api_key()
+    if gate: return gate
+    # Return a simple list of routes for debugging (no secrets)
+    out = []
+    try:
+        for r in app.url_map.iter_rules():
+            out.append({"rule": str(r), "methods": sorted([m for m in r.methods if m not in ("HEAD","OPTIONS")])})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({"ok": True, "routes": out})
+
+@app.post("/api/apply")
+def api_apply():
+    gate = _opti_require_api_key()
+    if gate: return gate
+
+    body = request.get_json(silent=True) or {}
+
+    amount = body.get("amount", body.get("allocation", body.get("amount_usd", 0)))
+    try:
+        amount = float(amount)
+    except Exception:
+        return jsonify({"ok": False, "error": "Invalid amount"}), 400
+
+    if amount < 100 or amount > 1000:
+        return jsonify({"ok": False, "error": "Amount must be between 100 and 1000"}), 400
+
+    # Minimal acceptance response (storage can be added next)
+    return jsonify({
+        "ok": True,
+        "received": {
+            "full_name": (body.get("full_name") or "").strip(),
+            "email": (body.get("email") or "").strip(),
+            "phone": (body.get("phone") or "").strip(),
+            "country": (body.get("country") or "").strip(),
+            "wallet": (body.get("wallet") or "").strip(),
+            "amount": amount,
+            "note": (body.get("note") or "").strip(),
+        }
+    })
