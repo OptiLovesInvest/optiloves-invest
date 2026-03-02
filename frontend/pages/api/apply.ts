@@ -1,9 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const PROXY_VERSION = "27bcd3c7";
+
+function setHdr(res: NextApiResponse) {
+  res.setHeader("x-opti-apply-proxy", "pages-" + PROXY_VERSION);
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  setHdr(res);
+
+  if (req.method === "GET") {
+    return res.status(200).json({ ok: true, proxy: "pages", version: PROXY_VERSION });
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+    res.setHeader("Allow", "GET, POST");
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
   try {
@@ -25,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       allocation: Number(body.allocation ?? body.amount),
     };
 
-    const r = await fetch(`${backend}/api/apply`, {
+    const r = await fetch(${backend}/api/apply, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -35,21 +47,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const text = await r.text();
+    res.status(r.status);
 
-    // Debug on upstream error: return what we sent + upstream response (no secrets)
+    // If upstream rejects, return upstream + what we sent (no secrets)
     if (!r.ok) {
       try {
-        return res.status(r.status).json({ ok: false, upstream: JSON.parse(text), sent: payload });
+        return res.json({ ok: false, upstream: JSON.parse(text), sent: payload });
       } catch {
-        return res.status(r.status).json({ ok: false, upstream: text, sent: payload });
+        return res.json({ ok: false, upstream: text, sent: payload });
       }
     }
 
     // Success: return upstream response
     try {
-      return res.status(r.status).json(JSON.parse(text));
+      return res.json(JSON.parse(text));
     } catch {
-      return res.status(r.status).send(text);
+      return res.send(text);
     }
   } catch (e: any) {
     return res.status(500).json({ ok: false, error: e?.message || "Proxy error" });
