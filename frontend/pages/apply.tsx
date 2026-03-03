@@ -24,7 +24,7 @@ export default function Apply() {
     };
 
     try {
-      const r = await fetch("https://optilovesinvest.com/api/apply", {
+      const r = await fetch("/api/apply", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
@@ -107,7 +107,7 @@ export default function Apply() {
       </p>
 
       <p style={{ marginTop: 28, fontSize: 13, opacity: 0.75 }}>
-        Optiloves Invest Ã¢â‚¬â€ Prosper through Love and Investment.
+        Optiloves Invest ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Prosper through Love and Investment.
       </p>
     </main>
   );
