@@ -41,3 +41,9 @@ backend/**/*.txt
 backend/**/*.sql
 backend/**/package-lock.json
 frontend/**/*.bak*
+backend/_backup_*
+backend/_finalize_backup_*
+backend/_backup_before_*
+backend/_*backup*
+_backups/
+backend/_backups/
